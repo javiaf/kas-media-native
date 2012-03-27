@@ -7,3 +7,6 @@
 [submodule "jni/external/opencore-amr"]
 	path = jni/external/opencore-amr
 	url = ../opencore-amr
+[submodule "kc-media-native"]
+	path = kc-media-native
+	url = ../kc-media-native
