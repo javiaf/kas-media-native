@@ -10,7 +10,6 @@ fi
 
 pushd `dirname $0`
 
-export EXTERNAL=$PWD/external
 TARGET_DIR=$PWD/target
 MARK_FILE=$TARGET_DIR/config.mark
 

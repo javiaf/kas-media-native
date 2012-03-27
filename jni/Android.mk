@@ -1,7 +1,9 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
-export MY_FFMPEG_SOURCE := $(NDK_PROJECT_PATH)/jni/external/ffmpeg
+export EXTERNAL := $(NDK_PROJECT_PATH)/kc-media-native/external
+
+export MY_FFMPEG_SOURCE := $(EXTERNAL)/ffmpeg
 export MY_FFMPEG_INSTALL := $(MY_FFMPEG_SOURCE)
 
 export MY_AMR_INSTALL := $(NDK_PROJECT_PATH)/jni/target/opencore-amr_install
@@ -15,7 +17,8 @@ ifdef ENABLE_X264
 	LOCAL_CFLAGS += -DUSE_X264
 endif
 
-RESULT := $(shell export MY_FFMPEG_INSTALL=$(MY_FFMPEG_INSTALL); \
+RESULT := $(shell export EXTERNAL=$(EXTERNAL); \
+		export MY_FFMPEG_INSTALL=$(MY_FFMPEG_INSTALL); \
 		export MY_AMR_INSTALL=$(MY_AMR_INSTALL); \
 		export MY_X264_INSTALL=$(MY_X264_INSTALL); \
 		$(NDK_PROJECT_PATH)/jni/configure-make-all.sh)
