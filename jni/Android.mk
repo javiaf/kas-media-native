@@ -51,7 +51,8 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c 
 			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
 			$(MEDIA_SOURCES)/tx/video-tx.c $(MEDIA_SOURCES)/tx/audio-tx.c \
 			$(MEDIA_SOURCES)/rx/sdp-manager.c $(MEDIA_SOURCES)/rx/video-rx.c $(MEDIA_SOURCES)/rx/audio-rx.c \
-			media/init-log.c
+			media/init-log.c \
+			media/tx/media-tx.c
 
 include $(BUILD_SHARED_LIBRARY)
 
