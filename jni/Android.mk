@@ -1,6 +1,7 @@
 LOCAL_PATH := $(call my-dir)
 include $(CLEAR_VARS)
 
+MEDIA_SOURCES := ../kc-media-native/media
 export EXTERNAL := $(NDK_PROJECT_PATH)/kc-media-native/external
 
 export MY_FFMPEG_SOURCE := $(EXTERNAL)/ffmpeg
@@ -39,14 +40,16 @@ LOCAL_LDLIBS += $(FFMPEG_LIBS) $(MY_AMR_LDLIB) $(MY_X264_LDLIB) \
 LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MY_AMR_C_INCLUDE) \
 			$(MY_X264_C_INCLUDE) \
-			$(LOCAL_PATH)/media \
-			$(LOCAL_PATH)/media/rx
+			$(MEDIA_SOURCES) \
+			$(MEDIA_SOURCES)/util \
+			$(MEDIA_SOURCES)/rx \
+			$(MEDIA_SOURCES)/tx \
 
 LOCAL_MODULE := android-media
-LOCAL_SRC_FILES :=	media/utils.c \
-			media/my-cmdutils.c media/init-media.c media/socket-manager.c \
-			media/tx/video-tx.c media/tx/audio-tx.c	 \
-			media/rx/sdp-manager.c media/rx/video-rx.c media/rx/audio-rx.c
+LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c $(MEDIA_SOURCES)/socket-manager.c \
+			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
+			$(MEDIA_SOURCES)/tx/video-tx.c $(MEDIA_SOURCES)/tx/audio-tx.c \
+			$(MEDIA_SOURCES)/rx/sdp-manager.c $(MEDIA_SOURCES)/rx/video-rx.c $(MEDIA_SOURCES)/rx/audio-rx.c
 
 include $(BUILD_SHARED_LIBRARY)
 
