@@ -51,7 +51,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass class,
 }
 
 jint
-Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jobject thiz,
+Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass class,
 				jbyteArray frame, jint width, jint height)
 {
 	int ret;
@@ -65,13 +65,13 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jobject thiz,
 }
 
 jint
-Java_com_kurento_kas_media_tx_MediaTx_finishVideo (JNIEnv* env, jobject thiz)
+Java_com_kurento_kas_media_tx_MediaTx_finishVideo (JNIEnv* env, jclass class)
 {
 	return finish_video_tx();
 }
 
 jint
-Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jobject thiz,
+Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass class,
 					jstring outfile, jint codec_id,
 					jint sample_rate, jint bit_rate,
 					jint payload_type)
@@ -96,7 +96,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jobject thiz,
 }
 
 jint
-Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jobject thiz,
+Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass class,
 					jshortArray samples, jint n_samples)
 {
 	int ret;
@@ -110,7 +110,7 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jobject thiz,
 }
 
 jint
-Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jobject thiz)
+Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass class)
 {
 	return finish_audio_tx();
 }
