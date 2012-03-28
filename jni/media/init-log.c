@@ -32,7 +32,7 @@ android_media_log(MediaLogLevel level, const char *tag, const char *fmt, va_list
 		android_log = ANDROID_LOG_VERBOSE;
 		break;
 	case MEDIA_LOG_DEBUG:
-		android_log = ANDROID_LOG_FATAL;
+		android_log = ANDROID_LOG_DEBUG;
 		break;
 	case MEDIA_LOG_INFO:
 		android_log = ANDROID_LOG_INFO;
