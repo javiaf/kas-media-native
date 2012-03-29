@@ -28,7 +28,7 @@ static jmethodID video_mid;
 static JNIEnv* video_env;
 
 enum {
-	QUEUE_SIZE = 1, // FIXME: Coupled with VideoRecorderComponent
+	QUEUE_SIZE = 5, // FIXME: Coupled with VideoRecorderComponent
 	ANDROID_PIX_FMT = PIX_FMT_RGB32,
 };
 
@@ -169,6 +169,57 @@ jint
 Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass class)
 {
 	return stop_video_rx();
+}
+
+static jobject audio_receiver;
+static jmethodID audio_mid;
+static JNIEnv* audio_env;
+
+static void
+android_put_audio_samples_rx(uint8_t *samples, int size, int nframe)
+{
+	jbyteArray jbuf = NULL;
+	jbuf = (jbyteArray)(*audio_env)->NewByteArray(audio_env, size);
+	(*audio_env)->SetByteArrayRegion(audio_env, jbuf, 0, size, (jbyte*)samples);
+	(*audio_env)->CallVoidMethod(audio_env, audio_receiver, audio_mid, jbuf, size, nframe);
+	(*audio_env)->DeleteLocalRef(audio_env, jbuf);
+}
+
+jint
+Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass class,
+				jstring sdp, jint maxDelay, jobject audioReceiver)
+{
+	int ret;
+	const char *p_sdp = NULL;
+
+	jclass cls;
+
+	if (init_log() != 0)
+		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
+
+	p_sdp = (*env)->GetStringUTFChars(env, sdp, NULL);
+	if (p_sdp == NULL) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		return -1;
+	}
+
+	cls = (*env)->GetObjectClass(env, audioReceiver);
+
+	audio_mid = (*env)->GetMethodID(env, cls, "putAudioSamplesRx", "([BII)V");
+	if (audio_mid == 0) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "putAudioSamplesRx([BII)V no exists");
+		ret = -2;
+		goto end;
+	}
+	audio_env = env;
+	audio_receiver = audioReceiver;
+
+	ret = start_audio_rx(p_sdp, maxDelay, &android_put_audio_samples_rx);
+
+end:
+	(*env)->ReleaseStringUTFChars(env, sdp, p_sdp);
+
+	return ret;
 }
 
 jint
