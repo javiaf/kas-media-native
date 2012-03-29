@@ -1,9 +1,3 @@
-[submodule "jni/external/ffmpeg"]
-	path = jni/external/ffmpeg
-	url = ../ffmpeg
-[submodule "jni/external/x264"]
-	path = jni/external/x264
-	url = ../x264
-[submodule "jni/external/opencore-amr"]
-	path = jni/external/opencore-amr
-	url = ../opencore-amr
+[submodule "kc-media-native"]
+	path = kc-media-native
+	url = ../kc-media-native

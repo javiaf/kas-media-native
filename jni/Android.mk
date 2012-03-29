@@ -1,7 +1,11 @@
-LOCAL_PATH := $(call my-dir)
+LOCAL_PATH := $(NDK_PROJECT_PATH)
 include $(CLEAR_VARS)
 
-export MY_FFMPEG_SOURCE := $(NDK_PROJECT_PATH)/jni/external/ffmpeg
+MEDIA_SOURCES := kc-media-native/media
+MEDIA_INCLUDES := $(NDK_PROJECT_PATH)/$(MEDIA_SOURCES)
+export EXTERNAL := $(NDK_PROJECT_PATH)/kc-media-native/external
+
+export MY_FFMPEG_SOURCE := $(EXTERNAL)/ffmpeg
 export MY_FFMPEG_INSTALL := $(MY_FFMPEG_SOURCE)
 
 export MY_AMR_INSTALL := $(NDK_PROJECT_PATH)/jni/target/opencore-amr_install
@@ -15,7 +19,8 @@ ifdef ENABLE_X264
 	LOCAL_CFLAGS += -DUSE_X264
 endif
 
-RESULT := $(shell export MY_FFMPEG_INSTALL=$(MY_FFMPEG_INSTALL); \
+RESULT := $(shell export EXTERNAL=$(EXTERNAL); \
+		export MY_FFMPEG_INSTALL=$(MY_FFMPEG_INSTALL); \
 		export MY_AMR_INSTALL=$(MY_AMR_INSTALL); \
 		export MY_X264_INSTALL=$(MY_X264_INSTALL); \
 		$(NDK_PROJECT_PATH)/jni/configure-make-all.sh)
@@ -36,14 +41,19 @@ LOCAL_LDLIBS += $(FFMPEG_LIBS) $(MY_AMR_LDLIB) $(MY_X264_LDLIB) \
 LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MY_AMR_C_INCLUDE) \
 			$(MY_X264_C_INCLUDE) \
-			$(LOCAL_PATH)/media \
-			$(LOCAL_PATH)/media/rx
+			$(MEDIA_INCLUDES) \
+			$(MEDIA_INCLUDES)/util \
+			$(MEDIA_INCLUDES)/rx \
+			$(MEDIA_INCLUDES)/tx \
+			$(LOCAL_PATH)/jni/media
 
 LOCAL_MODULE := android-media
-LOCAL_SRC_FILES :=	media/utils.c \
-			media/my-cmdutils.c media/init-media.c media/socket-manager.c \
-			media/tx/video-tx.c media/tx/audio-tx.c	 \
-			media/rx/sdp-manager.c media/rx/video-rx.c media/rx/audio-rx.c
+LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c $(MEDIA_SOURCES)/socket-manager.c \
+			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
+			$(MEDIA_SOURCES)/tx/video-tx.c $(MEDIA_SOURCES)/tx/audio-tx.c \
+			$(MEDIA_SOURCES)/rx/sdp-manager.c $(MEDIA_SOURCES)/rx/video-rx.c $(MEDIA_SOURCES)/rx/audio-rx.c \
+			jni/media/init-log.c \
+			jni/media/tx/media-tx.c jni/media/rx/media-rx.c jni/media/media-port-manager.c
 
 include $(BUILD_SHARED_LIBRARY)
 
