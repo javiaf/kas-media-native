@@ -50,7 +50,6 @@ static void
 decoded_frames_fill(int width, int height)
 {
 	int i, picture_nbytes;
-	jintArray jbuf;
 
 	// Determine required picture size
 	picture_nbytes = avpicture_get_size(ANDROID_PIX_FMT, width, height);
@@ -60,14 +59,13 @@ decoded_frames_fill(int width, int height)
 
 	if (picture_nbytes > buffer_nbytes) {
 		for (i=0; i<QUEUE_SIZE+1; i++) {
-			jbuf = adf[i].priv_data;
-			(*video_env)->DeleteLocalRef(video_env, jbuf);
-			jbuf = (jintArray)(*video_env)->NewIntArray(
+			(*video_env)->DeleteLocalRef(video_env, (jintArray)adf[i].priv_data);
+			adf[i].priv_data = (jintArray)(*video_env)->NewIntArray(
 					video_env, picture_nbytes/sizeof(jint));
 			adf[i].buffer = (uint8_t*)(*video_env)->GetIntArrayElements(
-					video_env, jbuf, NULL);
+					video_env, adf[i].priv_data, NULL);
 			(*video_env)->ReleaseIntArrayElements(video_env,
-					jbuf, (jint*)(adf[i].buffer), 0);
+					adf[i].priv_data, (jint*)(adf[i].buffer), 0);
 		}
 		buffer_nbytes = picture_nbytes;
 	}
