@@ -152,6 +152,11 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 		}
 	}
 
+	buffer_nbytes = 0;
+	n_frame = 0;
+	current_width = 0;
+	current_height = 0;
+
 	ret = start_video_rx(p_sdp, maxDelay, &android_frame_manager);
 
 end:
