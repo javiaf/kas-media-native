@@ -171,3 +171,9 @@ Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass class)
 	return stop_video_rx();
 }
 
+jint
+Java_com_kurento_kas_media_rx_MediaRx_stopAudioRx(JNIEnv* env, jclass class)
+{
+	return stop_audio_rx();
+}
+
