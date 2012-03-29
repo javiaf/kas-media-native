@@ -59,7 +59,7 @@ decoded_frames_fill(int width, int height)
 
 	if (picture_nbytes > buffer_nbytes) {
 		for (i=0; i<QUEUE_SIZE+1; i++) {
-			(*video_env)->DeleteLocalRef(video_env, (jintArray)adf[i].priv_data);
+			(*video_env)->DeleteLocalRef(video_env, adf[i].priv_data);
 			adf[i].priv_data = (jintArray)(*video_env)->NewIntArray(
 					video_env, picture_nbytes/sizeof(jint));
 			adf[i].buffer = (uint8_t*)(*video_env)->GetIntArrayElements(
