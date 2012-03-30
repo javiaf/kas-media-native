@@ -38,9 +38,8 @@ static DecodedFrame adf[QUEUE_SIZE+1];
 static int buffer_nbytes, n_frame;
 static int current_width, current_height;
 
-
 static jobject
-create_decodedframe_obj(JNIEnv *env, DecodedFrame *df)
+create_videoframe_obj(JNIEnv *env, DecodedFrame *df)
 {
 	return (*env)->NewObject(env, VideoFrame_class, VideoFrame_init_mid,
 				(jintArray)df->priv_data, df->width, df->height,
@@ -53,7 +52,7 @@ android_put_video_frame_rx(DecodedFrame *decoded_frame)
 {
 	jobject df_obj;
 
-	df_obj = create_decodedframe_obj(video_env, decoded_frame);
+	df_obj = create_videoframe_obj(video_env, decoded_frame);
 	if (df_obj)
 		(*video_env)->CallVoidMethod(video_env, video_receiver,
 							video_mid, df_obj);
