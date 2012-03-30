@@ -24,7 +24,8 @@
 static char* LOG_TAG = "NDK-media-rx";
 
 static jobject video_receiver;
-static jmethodID video_mid;
+static jclass VideoFrame_class;
+static jmethodID video_mid, VideoFrame_init_mid;
 static JNIEnv* video_env;
 
 enum {
@@ -38,12 +39,25 @@ static int buffer_nbytes, n_frame;
 static int current_width, current_height;
 
 
-static void
-android_put_video_frame_rx(DecodedFrame* decoded_frame,
-					int width, int height, int nframe)
+static jobject
+create_decodedframe_obj(JNIEnv *env, DecodedFrame *df)
 {
-	(*video_env)->CallVoidMethod(video_env, video_receiver, video_mid,
-		(jintArray)decoded_frame->priv_data, width, height, nframe);
+	return (*env)->NewObject(env, VideoFrame_class, VideoFrame_init_mid,
+				(jintArray)df->priv_data, df->width, df->height,
+				df->time_base.num, df->time_base.den,
+				df->pts, df->start_time);
+}
+
+static void
+android_put_video_frame_rx(DecodedFrame *decoded_frame)
+{
+	jobject df_obj;
+
+	df_obj = create_decodedframe_obj(video_env, decoded_frame);
+	if (df_obj)
+		(*video_env)->CallVoidMethod(video_env, video_receiver,
+							video_mid, df_obj);
+	(*video_env)->DeleteLocalRef(video_env, df_obj);
 }
 
 static void
@@ -121,7 +135,17 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 	int i, ret;
 	const char *p_sdp = NULL;
 
-	jclass cls;
+	jclass cls = NULL;
+
+	buffer_nbytes = 0;
+	n_frame = 0;
+	current_width = 0;
+	current_height = 0;
+
+	video_mid = NULL;
+	VideoFrame_init_mid = NULL;
+	video_receiver = NULL;
+	VideoFrame_class = NULL;
 
 	if (init_log() != 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -133,13 +157,31 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 	}
 
 	cls = (*env)->GetObjectClass(env, videoReceiver);
-
-	video_mid = (*env)->GetMethodID(env, cls, "putVideoFrameRx", "([IIII)V");
-	if (video_mid == 0) {
-		media_log(MEDIA_LOG_ERROR, LOG_TAG, "putVideoFrameRx([IIII)V no exist");
+	video_mid = (*env)->GetMethodID(env, cls, "putVideoFrameRx",
+				"(Lcom/kurento/kas/media/rx/VideoFrame;)V");
+	if (!video_mid) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+		"putVideoFrameRx(Lcom/kurento/kas/media/rx/VideoFrame;)V no exist");
 		ret = -2;
 		goto end;
 	}
+
+	VideoFrame_class = (*env)->FindClass(env, "com/kurento/kas/media/rx/VideoFrame");
+	if (!VideoFrame_class) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+				"com/kurento/kas/media/rx/VideoFrame not found");
+		ret = -3;
+		goto end;
+	}
+
+	VideoFrame_init_mid = (*env)->GetMethodID(env, VideoFrame_class,
+							"<init>", "([IIIIIJJ)V");
+	if (!VideoFrame_init_mid) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([IIIIIJJ)V not found");
+		ret = -4;
+		goto end;
+	}
+
 	video_env = env;
 	video_receiver = videoReceiver;
 
@@ -152,14 +194,12 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 		}
 	}
 
-	buffer_nbytes = 0;
-	n_frame = 0;
-	current_width = 0;
-	current_height = 0;
-
 	ret = start_video_rx(p_sdp, maxDelay, &android_frame_manager);
 
 end:
+	(*env)->DeleteLocalRef(env, cls);
+	(*env)->DeleteLocalRef(env, video_receiver);
+	(*env)->DeleteLocalRef(env, VideoFrame_class);
 	(*env)->ReleaseStringUTFChars(env, sdp, p_sdp);
 
 	return ret;
