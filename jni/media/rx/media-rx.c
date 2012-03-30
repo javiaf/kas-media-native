@@ -210,18 +210,39 @@ Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass class)
 	return stop_video_rx();
 }
 
+
 static jobject audio_receiver;
-static jmethodID audio_mid;
+static jclass AudioSamples_class;
+static jmethodID audio_mid, AudioSamples_init_mid;
 static JNIEnv* audio_env;
 
-static void
-android_put_audio_samples_rx(uint8_t *samples, int size, int nframe)
+static jobject
+create_audiosamples_obj(JNIEnv *env, DecodedAudioSamples *das)
 {
+	jobject das_obj = NULL;
 	jbyteArray jbuf = NULL;
-	jbuf = (jbyteArray)(*audio_env)->NewByteArray(audio_env, size);
-	(*audio_env)->SetByteArrayRegion(audio_env, jbuf, 0, size, (jbyte*)samples);
-	(*audio_env)->CallVoidMethod(audio_env, audio_receiver, audio_mid, jbuf, size, nframe);
-	(*audio_env)->DeleteLocalRef(audio_env, jbuf);
+
+	jbuf = (jbyteArray)(*env)->NewByteArray(env, das->size);
+	(*env)->SetByteArrayRegion(env, jbuf, 0, das->size, (jbyte*)das->samples);
+	das_obj = (*env)->NewObject(env, AudioSamples_class, AudioSamples_init_mid,
+				jbuf, das->size,
+				das->time_base.num, das->time_base.den,
+				das->pts, das->start_time);
+	(*env)->DeleteLocalRef(env, jbuf);
+
+	return das_obj;
+}
+
+static void
+android_put_audio_samples_rx(DecodedAudioSamples* decoded_audio_samples)
+{
+	jobject das_obj;
+
+	das_obj = create_audiosamples_obj(audio_env, decoded_audio_samples);
+	if (das_obj)
+		(*audio_env)->CallVoidMethod(audio_env, audio_receiver,
+							audio_mid, das_obj);
+	(*audio_env)->DeleteLocalRef(audio_env, das_obj);
 }
 
 jint
@@ -231,7 +252,12 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass class,
 	int ret;
 	const char *p_sdp = NULL;
 
-	jclass cls;
+	jclass cls = NULL;
+
+	audio_mid = NULL;
+	AudioSamples_init_mid = NULL;
+	audio_receiver = NULL;
+	AudioSamples_class = NULL;
 
 	if (init_log() != 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -244,18 +270,40 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass class,
 
 	cls = (*env)->GetObjectClass(env, audioReceiver);
 
-	audio_mid = (*env)->GetMethodID(env, cls, "putAudioSamplesRx", "([BII)V");
+	audio_mid = (*env)->GetMethodID(env, cls, "putAudioSamplesRx",
+				"(Lcom/kurento/kas/media/rx/AudioSamples;)V");
 	if (audio_mid == 0) {
-		media_log(MEDIA_LOG_ERROR, LOG_TAG, "putAudioSamplesRx([BII)V no exists");
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+			"(Lcom/kurento/kas/media/rx/AudioSamples;)V no exists");
 		ret = -2;
 		goto end;
 	}
+
+	AudioSamples_class = (*env)->FindClass(env, "com/kurento/kas/media/rx/AudioSamples");
+	if (!AudioSamples_class) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+				"com/kurento/kas/media/rx/AudioSamples not found");
+		ret = -3;
+		goto end;
+	}
+
+	AudioSamples_init_mid = (*env)->GetMethodID(env, AudioSamples_class,
+							"<init>", "([BIIIJJ)V");
+	if (!AudioSamples_init_mid) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([BIIIJJ)V not found");
+		ret = -4;
+		goto end;
+	}
+
 	audio_env = env;
 	audio_receiver = audioReceiver;
 
 	ret = start_audio_rx(p_sdp, maxDelay, &android_put_audio_samples_rx);
 
 end:
+	(*env)->DeleteLocalRef(env, cls);
+	(*env)->DeleteLocalRef(env, audio_receiver);
+	(*env)->DeleteLocalRef(env, AudioSamples_class);
 	(*env)->ReleaseStringUTFChars(env, sdp, p_sdp);
 
 	return ret;
