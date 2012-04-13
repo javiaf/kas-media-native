@@ -29,13 +29,13 @@ static jmethodID video_mid, VideoFrame_init_mid;
 static JNIEnv* video_env;
 
 enum {
-	QUEUE_SIZE = 5, // FIXME: Coupled with VideoRecorderComponent
+	QUEUE_SIZE = 20, // FIXME: Coupled with VideoRecorderComponent
 	ANDROID_PIX_FMT = PIX_FMT_RGB32,
 };
 
 static DecodedFrame adf[QUEUE_SIZE+1];
 
-static int buffer_nbytes, n_frame;
+static int n_frame;
 static int current_width, current_height;
 
 static jobject
@@ -60,31 +60,29 @@ android_put_video_frame_rx(DecodedFrame *decoded_frame)
 }
 
 static void
-decoded_frames_fill(int width, int height)
+decoded_frame_fill(DecodedFrame *df, int width, int height)
 {
-	int i, picture_nbytes;
+	int i, picture_nbytes, current_nbytes;
 
 	// Determine required picture size
 	picture_nbytes = avpicture_get_size(ANDROID_PIX_FMT, width, height);
+	current_nbytes = avpicture_get_size(ANDROID_PIX_FMT, df->width, df->height);
 	media_log(MEDIA_LOG_INFO, LOG_TAG,
-			"buffer_nbytes: %d\tpicture_nbytes: %d",
-			buffer_nbytes, picture_nbytes);
+			"current_nbytes: %d\tpicture_nbytes: %d",
+			current_nbytes, picture_nbytes);
 
-	if (picture_nbytes > buffer_nbytes) {
-		for (i=0; i<QUEUE_SIZE+1; i++) {
-			(*video_env)->DeleteLocalRef(video_env, adf[i].priv_data);
-			adf[i].priv_data = (jintArray)(*video_env)->NewIntArray(
-					video_env, picture_nbytes/sizeof(jint));
-			adf[i].buffer = (uint8_t*)(*video_env)->GetIntArrayElements(
-					video_env, adf[i].priv_data, NULL);
-			(*video_env)->ReleaseIntArrayElements(video_env,
-					adf[i].priv_data, (jint*)(adf[i].buffer), 0);
-		}
-		buffer_nbytes = picture_nbytes;
+	if (picture_nbytes > current_nbytes) {
+		(*video_env)->DeleteLocalRef(video_env, df->priv_data);
+		df->priv_data = (jintArray)(*video_env)->NewIntArray(
+				video_env, picture_nbytes/sizeof(jint));
+		df->buffer = (uint8_t*)(*video_env)->GetIntArrayElements(
+						video_env, df->priv_data, NULL);
+		(*video_env)->ReleaseIntArrayElements(video_env,
+					df->priv_data, (jint*)(df->buffer), 0);
 	}
 
 	for (i=0; i<QUEUE_SIZE+1; i++) {
-		avpicture_fill((AVPicture*) adf[i].pFrameRGB, adf[i].buffer,
+		avpicture_fill((AVPicture*) df->pFrameRGB, df->buffer,
 						ANDROID_PIX_FMT, width, height);
 	}
 }
@@ -92,10 +90,10 @@ decoded_frames_fill(int width, int height)
 static DecodedFrame*
 android_get_decoded_frame(int width, int height)
 {
-	DecodedFrame *df = NULL;
+	DecodedFrame *df = &adf[n_frame];
 
-	if ((current_width != width) || (current_height != height)) {
-		decoded_frames_fill(width, height);
+	if ((df->width != width) || (df->height != height)) {
+		decoded_frame_fill(df, width, height);
 		current_width = width;
 		current_height = height;
 		media_log(MEDIA_LOG_INFO, LOG_TAG,
@@ -103,7 +101,6 @@ android_get_decoded_frame(int width, int height)
 				current_width, current_height);
 	}
 
-	df = &adf[n_frame];
 	n_frame = (n_frame+1) % (QUEUE_SIZE+1);
 
 	return df;
@@ -136,7 +133,6 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 
 	jclass cls = NULL;
 
-	buffer_nbytes = 0;
 	n_frame = 0;
 	current_width = 0;
 	current_height = 0;
@@ -186,6 +182,8 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 
 	//Allocate AVFrames structures
 	for (i=0; i<QUEUE_SIZE+1; i++) {
+		adf[i].width = 0;
+		adf[i].height = 0;
 		adf[i].pFrameRGB = avcodec_alloc_frame();
 		if (adf[i].pFrameRGB == NULL) {
 			ret = -3;
