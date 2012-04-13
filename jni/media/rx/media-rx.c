@@ -184,6 +184,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 	for (i=0; i<QUEUE_SIZE+1; i++) {
 		adf[i].width = 0;
 		adf[i].height = 0;
+		adf[i].priv_data = NULL;
 		adf[i].pFrameRGB = avcodec_alloc_frame();
 		if (adf[i].pFrameRGB == NULL) {
 			ret = -3;
