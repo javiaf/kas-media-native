@@ -44,7 +44,7 @@ create_videoframe_obj(JNIEnv *env, DecodedFrame *df)
 	return (*env)->NewObject(env, VideoFrame_class, VideoFrame_init_mid,
 				(jintArray)df->priv_data, df->width, df->height,
 				df->time_base.num, df->time_base.den,
-				df->pts, df->start_time);
+				df->pts, df->start_time, df->rx_time);
 }
 
 static void
@@ -170,9 +170,9 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 	}
 
 	VideoFrame_init_mid = (*env)->GetMethodID(env, VideoFrame_class,
-							"<init>", "([IIIIIJJ)V");
+							"<init>", "([IIIIIJJJ)V");
 	if (!VideoFrame_init_mid) {
-		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([IIIIIJJ)V not found");
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([IIIIIJJJ)V not found");
 		ret = -4;
 		goto end;
 	}
@@ -226,7 +226,7 @@ create_audiosamples_obj(JNIEnv *env, DecodedAudioSamples *das)
 	das_obj = (*env)->NewObject(env, AudioSamples_class, AudioSamples_init_mid,
 				jbuf, das->size,
 				das->time_base.num, das->time_base.den,
-				das->pts, das->start_time);
+				das->pts, das->start_time, das->rx_time);
 	(*env)->DeleteLocalRef(env, jbuf);
 
 	return das_obj;
@@ -287,9 +287,9 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass class,
 	}
 
 	AudioSamples_init_mid = (*env)->GetMethodID(env, AudioSamples_class,
-							"<init>", "([BIIIJJ)V");
+							"<init>", "([BIIIJJJ)V");
 	if (!AudioSamples_init_mid) {
-		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([BIIIJJ)V not found");
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([BIIIJJJ)V not found");
 		ret = -4;
 		goto end;
 	}
