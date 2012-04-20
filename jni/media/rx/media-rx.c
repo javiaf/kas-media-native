@@ -196,7 +196,6 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass class,
 
 end:
 	(*env)->DeleteLocalRef(env, cls);
-	(*env)->DeleteLocalRef(env, video_receiver);
 	(*env)->DeleteLocalRef(env, VideoFrame_class);
 	(*env)->ReleaseStringUTFChars(env, sdp, p_sdp);
 
