@@ -58,7 +58,7 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass class,
 	uint8_t* frame_buf;
 
 	frame_buf = (uint8_t*)((*env)->GetByteArrayElements(env, frame, JNI_FALSE));
-	ret = put_video_frame_tx(frame_buf, width, height);
+	ret = put_video_frame_tx(PIX_FMT_NV21, frame_buf, width, height);
 	(*env)->ReleaseByteArrayElements(env, frame, (jbyte*)frame_buf, 0);
 
 	return ret;
