@@ -52,20 +52,20 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass class,
 
 jint
 Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass class,
-				jbyteArray frame, jint width, jint height)
+			jbyteArray frame, jint width, jint height, jlong time)
 {
 	int ret;
 	uint8_t* frame_buf;
 
 	frame_buf = (uint8_t*)((*env)->GetByteArrayElements(env, frame, JNI_FALSE));
-	ret = put_video_frame_tx(PIX_FMT_NV21, frame_buf, width, height);
+	ret = put_video_frame_tx(PIX_FMT_NV21, frame_buf, width, height, time);
 	(*env)->ReleaseByteArrayElements(env, frame, (jbyte*)frame_buf, 0);
 
 	return ret;
 }
 
 jint
-Java_com_kurento_kas_media_tx_MediaTx_finishVideo (JNIEnv* env, jclass class)
+Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass class)
 {
 	return finish_video_tx();
 }
