@@ -97,13 +97,13 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass class,
 
 jint
 Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass class,
-					jshortArray samples, jint n_samples)
+				jshortArray samples, jint n_samples, jlong time)
 {
 	int ret;
 	int16_t *samples_buf;
 
 	samples_buf = (int16_t*)((*env)->GetShortArrayElements(env, samples, JNI_FALSE));
-	ret = put_audio_samples_tx(samples_buf, n_samples);
+	ret = put_audio_samples_tx(samples_buf, n_samples, time);
 	(*env)->ReleaseShortArrayElements(env, samples, samples_buf, 0);
 
 	return ret;
