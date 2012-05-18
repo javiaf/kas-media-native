@@ -62,7 +62,7 @@ android_put_video_frame_rx(DecodedFrame *decoded_frame)
 static void
 decoded_frame_fill(DecodedFrame *df, int width, int height)
 {
-	int i, picture_nbytes, current_nbytes;
+	int picture_nbytes, current_nbytes;
 
 	// Determine required picture size
 	picture_nbytes = avpicture_get_size(ANDROID_PIX_FMT, width, height);
@@ -81,10 +81,8 @@ decoded_frame_fill(DecodedFrame *df, int width, int height)
 					df->priv_data, (jint*)(df->buffer), 0);
 	}
 
-	for (i=0; i<QUEUE_SIZE+1; i++) {
-		avpicture_fill((AVPicture*) df->pFrameRGB, df->buffer,
+	avpicture_fill((AVPicture*) df->pFrameRGB, df->buffer,
 						ANDROID_PIX_FMT, width, height);
-	}
 }
 
 static DecodedFrame*
