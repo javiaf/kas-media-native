@@ -68,6 +68,9 @@ android_get_decoded_frame(int width, int height)
 	(*video_env)->DeleteLocalRef(video_env, df.priv_data);
 	df.priv_data = (jintArray)(*video_env)->CallObjectMethod(
 		video_env, video_receiver, get_frame_buffer_mid, picture_nbytes);
+	if (!df.priv_data)
+		return NULL;
+
 	df.buffer = (uint8_t*)(*video_env)->GetIntArrayElements(
 						video_env, df.priv_data, NULL);
 	(*video_env)->ReleaseIntArrayElements(video_env,
