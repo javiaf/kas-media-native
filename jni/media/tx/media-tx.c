@@ -43,7 +43,8 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass class,
 	}
 
 	ret = init_video_tx(f, width, height, frame_rate_num, frame_rate_den,
-				bit_rate, gop_size, codecId, payload_type);
+				bit_rate, gop_size, codecId, payload_type,
+				PIX_FMT_NV21);
 
 	(*env)->ReleaseStringUTFChars(env, outfile, f);
 
@@ -58,8 +59,8 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass class,
 	uint8_t* frame_buf;
 
 	frame_buf = (uint8_t*)((*env)->GetByteArrayElements(env, frame, JNI_FALSE));
-	ret = put_video_frame_tx(PIX_FMT_NV21, frame_buf, width, height, time);
-	(*env)->ReleaseByteArrayElements(env, frame, (jbyte*)frame_buf, 0);
+	ret = put_video_frame_tx(frame_buf, width, height, time);
+	(*env)->ReleaseByteArrayElements(env, frame, (jbyte*)frame_buf, JNI_ABORT);
 
 	return ret;
 }
