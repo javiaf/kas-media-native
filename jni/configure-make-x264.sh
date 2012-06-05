@@ -16,7 +16,6 @@ fi
 	--extra-ldflags="$MY_LDFLAGS -lgcc " \
 	--disable-asm \
 	--cross-prefix=$abi- \
-	--disable-pthread \
 	--host=arm-linux
 
 make
