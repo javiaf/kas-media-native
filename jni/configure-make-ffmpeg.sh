@@ -14,7 +14,7 @@ make clean && make distclean || echo OK
 	--nm=$abi-nm \
 	--enable-static \
 	--disable-shared \
-	--disable-asm --disable-yasm --enable-neon --enable-pic \
+	--enable-neon --enable-pic \
 	--disable-amd3dnow --disable-amd3dnowext --disable-mmx --disable-mmx2 --disable-sse --disable-ssse3 \
 	--enable-version3 \
 	--disable-nonfree \
