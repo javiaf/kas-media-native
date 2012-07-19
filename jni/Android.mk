@@ -47,13 +47,18 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MEDIA_INCLUDES)/tx \
 			$(LOCAL_PATH)/jni/media
 
+
+LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
+
+
 LOCAL_MODULE := android-media
 LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c $(MEDIA_SOURCES)/socket-manager.c \
 			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
 			$(MEDIA_SOURCES)/tx/video-tx.c $(MEDIA_SOURCES)/tx/audio-tx.c \
 			$(MEDIA_SOURCES)/rx/sdp-manager.c $(MEDIA_SOURCES)/rx/video-rx.c $(MEDIA_SOURCES)/rx/audio-rx.c \
 			jni/media/init-log.c \
-			jni/media/tx/media-tx.c jni/media/rx/media-rx.c jni/media/media-port-manager.c
+			jni/media/tx/media-tx.c jni/media/rx/media-rx.c jni/media/media-port-manager.c \
+			\
+			kc-media-native/media-oo/VideoTx.cpp
 
 include $(BUILD_SHARED_LIBRARY)
-
