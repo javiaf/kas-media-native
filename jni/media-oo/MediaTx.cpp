@@ -25,11 +25,13 @@ extern "C" {
 #include "util/utils.h"
 }
 
+#include <AudioTx.h>
 #include <VideoTx.h>
 
 using namespace media;
 
 static char* LOG_TAG = "NDK-media-tx";
+static AudioTx *aTxObj;
 static VideoTx *vTxObj;
 
 extern "C" {
@@ -75,6 +77,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 //				PIX_FMT_NV21);
 
 	enum CodecID codec_id;
+//TODO: throw exception
 	int ret2 = get_CodecID_from_VideoCodecTypeEnum(env, videoCodecType, &codec_id);
 media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
 	vTxObj = new VideoTx(f, width, height, frame_rate_num, frame_rate_den,
@@ -106,7 +109,10 @@ JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz)
 {
 	//return finish_video_tx();
-	delete vTxObj;
+	if (vTxObj) {
+		delete vTxObj;
+		vTxObj = NULL;
+	}
 	return 0;
 }
 
@@ -128,11 +134,15 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 		return -1;
 	}
 
-	ret = init_audio_tx(f, codec_id, sample_rate, bit_rate, payload_type);
+	//ret = init_audio_tx(f, codec_id, sample_rate, bit_rate, payload_type);
+//FIXME: delete CODEC_ID_AMR_NB
+aTxObj = new AudioTx(f, CODEC_ID_AMR_NB, sample_rate, bit_rate, payload_type);
 
 	env->ReleaseStringUTFChars(outfile, f);
 
-	return ret;
+//FIXME: add getFrameSize method
+	//return ret;
+	return 160;
 }
 
 JNIEXPORT jint JNICALL
@@ -143,7 +153,8 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 	int16_t *samples_buf;
 
 	samples_buf = (int16_t*)(env->GetShortArrayElements(samples, JNI_FALSE));
-	ret = put_audio_samples_tx(samples_buf, n_samples, time);
+//	ret = put_audio_samples_tx(samples_buf, n_samples, time);
+	ret = aTxObj->putAudioSamplesTx(samples_buf, n_samples, time);
 	env->ReleaseShortArrayElements(samples, samples_buf, 0);
 
 	return ret;
@@ -152,6 +163,11 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass clazz)
 {
-	return finish_audio_tx();
+	if (aTxObj) {
+		delete aTxObj;
+		aTxObj = NULL;
+	}
+//	return finish_audio_tx();
+	return 0;
 }
 
