@@ -21,6 +21,8 @@ extern "C" {
 #include <jni.h>
 #include <video-tx.h>
 #include <audio-tx.h>
+
+#include "util/utils.h"
 }
 
 #include <VideoTx.h>
@@ -34,8 +36,8 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 				jstring outfile, jint width, jint height,
 				jint frame_rate_num, jint frame_rate_den,
-				jint bit_rate, jint gop_size, jint codecId,
-				jint payload_type);
+				jint bit_rate, jint gop_size,
+				jobject videoCodecType, jint payload_type);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 				jbyteArray frame, jint width, jint height, jlong time);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz);
@@ -47,14 +49,14 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 				jshortArray samples, jint n_samples, jlong time);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass clazz);
-};
+}
 
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 				jstring outfile, jint width, jint height,
 				jint frame_rate_num, jint frame_rate_den,
-				jint bit_rate, jint gop_size, jint codecId,
-				jint payload_type)
+				jint bit_rate, jint gop_size,
+				jobject videoCodecType, jint payload_type)
 {
 	int ret;
 	const char *f = NULL;
@@ -72,8 +74,11 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 //				bit_rate, gop_size, codecId, payload_type,
 //				PIX_FMT_NV21);
 
+	enum CodecID codec_id;
+	int ret2 = get_CodecID_from_VideoCodecTypeEnum(env, videoCodecType, &codec_id);
+media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
 	vTxObj = new VideoTx(f, width, height, frame_rate_num, frame_rate_den,
-				bit_rate, gop_size, CODEC_ID_MPEG4, payload_type,
+				bit_rate, gop_size, codec_id, payload_type,
 				PIX_FMT_NV21);
 
 	env->ReleaseStringUTFChars(outfile, f);
