@@ -46,7 +46,8 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MEDIA_INCLUDES)/rx \
 			$(MEDIA_INCLUDES)/tx \
 			$(MEDIA_INCLUDES)/../media-oo \
-			$(LOCAL_PATH)/jni/media
+			$(LOCAL_PATH)/jni/media \
+			$(LOCAL_PATH)/jni/media-oo
 
 
 LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
@@ -60,6 +61,7 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c 
 			jni/media/init-log.c \
 			jni/media-oo/MediaTx.cpp \jni/media/rx/media-rx.c jni/media/media-port-manager.c \
 			\
+			jni/media-oo/util/utils.c \
 			kc-media-native/media-oo/VideoTx.cpp
 
 include $(BUILD_SHARED_LIBRARY)
