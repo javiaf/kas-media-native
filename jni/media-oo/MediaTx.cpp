@@ -45,7 +45,7 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz);
 
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
-					jstring outfile, jint codec_id,
+					jstring outfile, jobject audioCodecType,
 					jint sample_rate, jint bit_rate,
 					jint payload_type);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
@@ -118,7 +118,7 @@ Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz)
 
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
-					jstring outfile, jint codec_id,
+					jstring outfile, jobject audioCodecType,
 					jint sample_rate, jint bit_rate,
 					jint payload_type)
 {
@@ -135,8 +135,11 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 	}
 
 	//ret = init_audio_tx(f, codec_id, sample_rate, bit_rate, payload_type);
-//FIXME: delete CODEC_ID_AMR_NB
-aTxObj = new AudioTx(f, CODEC_ID_AMR_NB, sample_rate, bit_rate, payload_type);
+	enum CodecID codec_id;
+//TODO: throw exception
+	int ret2 = get_CodecID_from_AudioCodecTypeEnum(env, audioCodecType, &codec_id);
+media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
+	aTxObj = new AudioTx(f, codec_id, sample_rate, bit_rate, payload_type);
 
 	env->ReleaseStringUTFChars(outfile, f);
 
