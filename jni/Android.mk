@@ -56,11 +56,13 @@ LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
 LOCAL_MODULE := android-media
 LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c $(MEDIA_SOURCES)/socket-manager.c \
 			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
-			$(MEDIA_SOURCES)/rx/sdp-manager.c $(MEDIA_SOURCES)/rx/video-rx.c $(MEDIA_SOURCES)/rx/audio-rx.c \
+			$(MEDIA_SOURCES)/rx/sdp-manager.c \
 			jni/media/init-log.c \
-			jni/media-oo/MediaTx.cpp \jni/media/rx/media-rx.c jni/media/media-port-manager.c \
+			jni/media-oo/MediaTx.cpp jni/media-oo/MediaRx.cpp jni/media/media-port-manager.c \
 			\
 			jni/media-oo/util/utils.c \
-			kc-media-native/media-oo/VideoTx.cpp kc-media-native/media-oo/AudioTx.cpp
+			kc-media-native/media-oo/Media.cpp \
+			kc-media-native/media-oo/VideoTx.cpp kc-media-native/media-oo/AudioTx.cpp \
+			kc-media-native/media-oo/VideoRx.cpp kc-media-native/media-oo/AudioRx.cpp
 
 include $(BUILD_SHARED_LIBRARY)
