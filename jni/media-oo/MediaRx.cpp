@@ -208,14 +208,6 @@ Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz)
 	return 0;
 }
 
-
-
-
-
-
-
-
-
 static jobject audio_receiver;
 static jclass AudioSamples_class;
 static jmethodID audio_mid, AudioSamples_init_mid;

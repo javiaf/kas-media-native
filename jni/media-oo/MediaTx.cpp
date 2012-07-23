@@ -19,8 +19,6 @@ extern "C" {
 #include <util/log.h>
 #include <init-log.h>
 #include <jni.h>
-#include <video-tx.h>
-#include <audio-tx.h>
 
 #include "util/utils.h"
 }
@@ -173,4 +171,3 @@ Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass clazz)
 //	return finish_audio_tx();
 	return 0;
 }
-
