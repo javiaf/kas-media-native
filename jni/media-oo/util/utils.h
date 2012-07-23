@@ -7,5 +7,7 @@
 
 int get_CodecID_from_VideoCodecTypeEnum(JNIEnv *env,
 			jobject videoCodecTypeEnumObj, enum CodecID *codec_id);
+int get_CodecID_from_AudioCodecTypeEnum(JNIEnv *env,
+			jobject audioCodecTypeEnumObj, enum CodecID *codec_id);
 
 #endif /* __UTILS_H__ */
