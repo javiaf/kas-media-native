@@ -63,6 +63,7 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c 
 			jni/media-oo/util/utils.c \
 			kc-media-native/media-oo/Media.cpp \
 			kc-media-native/media-oo/VideoTx.cpp kc-media-native/media-oo/AudioTx.cpp \
+			kc-media-native/media-oo/MediaRx.cpp \
 			kc-media-native/media-oo/VideoRx.cpp kc-media-native/media-oo/AudioRx.cpp
 
 include $(BUILD_SHARED_LIBRARY)
