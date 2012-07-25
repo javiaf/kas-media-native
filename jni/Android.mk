@@ -58,7 +58,7 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c 
 			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
 			$(MEDIA_SOURCES)/rx/sdp-manager.c \
 			jni/media/init-log.c \
-			jni/media-oo/MediaTx.cpp jni/media-oo/MediaRx.cpp jni/media/media-port-manager.c \
+			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp jni/media/media-port-manager.c \
 			\
 			jni/media-oo/util/utils.c \
 			kc-media-native/media-oo/Media.cpp \
