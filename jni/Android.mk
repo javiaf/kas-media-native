@@ -1,7 +1,7 @@
 LOCAL_PATH := $(NDK_PROJECT_PATH)
 include $(CLEAR_VARS)
 
-MEDIA_SOURCES := kc-media-native/media
+MEDIA_SOURCES := kc-media-native/media-oo
 MEDIA_INCLUDES := $(NDK_PROJECT_PATH)/$(MEDIA_SOURCES)
 export EXTERNAL := $(NDK_PROJECT_PATH)/kc-media-native/external
 
@@ -43,9 +43,6 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MY_X264_C_INCLUDE) \
 			$(MEDIA_INCLUDES) \
 			$(MEDIA_INCLUDES)/util \
-			$(MEDIA_INCLUDES)/rx \
-			$(MEDIA_INCLUDES)/tx \
-			$(MEDIA_INCLUDES)/../media-oo \
 			$(LOCAL_PATH)/jni/media \
 			$(LOCAL_PATH)/jni/media-oo
 
@@ -54,19 +51,17 @@ LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
 
 
 LOCAL_MODULE := android-media
-LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c \
-			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
-			$(MEDIA_SOURCES)/rx/sdp-manager.c \
+LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
+			$(MEDIA_SOURCES)/util/sdp-manager.c \
+			$(MEDIA_SOURCES)/Media.cpp \
+			$(MEDIA_SOURCES)/MediaPort.cpp $(MEDIA_SOURCES)/MediaPortManager.cpp \
+			$(MEDIA_SOURCES)/VideoTx.cpp $(MEDIA_SOURCES)/AudioTx.cpp \
+			$(MEDIA_SOURCES)/MediaRx.cpp \
+			$(MEDIA_SOURCES)/VideoRx.cpp $(MEDIA_SOURCES)/AudioRx.cpp \
+			\
 			jni/media/init-log.c \
 			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp \
 			jni/media-oo/JNIMediaPortManager.cpp \
-			jni/media-oo/util/utils.c \
-			\
-			kc-media-native/media-oo/util/utils.c \
-			kc-media-native/media-oo/Media.cpp \
-			kc-media-native/media-oo/MediaPort.cpp kc-media-native/media-oo/MediaPortManager.cpp \
-			kc-media-native/media-oo/VideoTx.cpp kc-media-native/media-oo/AudioTx.cpp \
-			kc-media-native/media-oo/MediaRx.cpp \
-			kc-media-native/media-oo/VideoRx.cpp kc-media-native/media-oo/AudioRx.cpp
+			jni/media-oo/util/utils.c
 
 include $(BUILD_SHARED_LIBRARY)
