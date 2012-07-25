@@ -188,7 +188,6 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	android_frame_manager.get_decoded_frame = android_get_decoded_frame;
 	android_frame_manager.release_decoded_frame =android_release_decoded_frame ;
 
-//	ret = start_video_rx(p_sdp, maxDelay, &android_frame_manager);
 	vRxObj = new VideoRx(videoMediaPort, p_sdp, maxDelay, &android_frame_manager);
 	vRxObj->start();
 	ret = 0;
@@ -204,7 +203,6 @@ end:
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz)
 {
-//	return stop_video_rx();
 	if (vRxObj) {
 		vRxObj->stop();
 		delete vRxObj;
@@ -301,7 +299,6 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	audio_env = env;
 	audio_receiver = audioReceiver;
 
-//	ret = start_audio_rx(p_sdp, maxDelay, &android_put_audio_samples_rx);
 	aRxObj = new AudioRx(audioMediaPort, p_sdp, maxDelay, &android_put_audio_samples_rx);
 	aRxObj->start();
 
@@ -317,7 +314,6 @@ end:
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_stopAudioRx(JNIEnv* env, jclass clazz)
 {
-//	return stop_audio_rx();
 	if (aRxObj) {
 		aRxObj->stop();
 		delete aRxObj;

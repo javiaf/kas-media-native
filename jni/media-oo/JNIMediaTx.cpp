@@ -75,21 +75,15 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 		return -1;
 	}
 
-//	ret = init_video_tx(f, width, height, frame_rate_num, frame_rate_den,
-//				bit_rate, gop_size, codecId, payload_type,
-//				PIX_FMT_NV21);
-
 	enum CodecID codec_id;
 //TODO: throw exception
-	int ret2 = get_CodecID_from_VideoCodecTypeEnum(env, videoCodecType, &codec_id);
-media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
+	get_CodecID_from_VideoCodecTypeEnum(env, videoCodecType, &codec_id);
 	vTxObj = new VideoTx(f, width, height, frame_rate_num, frame_rate_den,
 				bit_rate, gop_size, codec_id, payload_type,
 				PIX_FMT_NV21, videoMediaPort);
 
 	env->ReleaseStringUTFChars(outfile, f);
-media_log(MEDIA_LOG_DEBUG, LOG_TAG, "initVideo vTxObj: %p, ", vTxObj);
-	//return ret;
+
 	return 0;
 }
 
@@ -101,7 +95,6 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 	uint8_t* frame_buf;
 media_log(MEDIA_LOG_DEBUG, LOG_TAG, "putVideoFrame vTxObj: %p, ", vTxObj);
 	frame_buf = (uint8_t*)(env->GetByteArrayElements(frame, JNI_FALSE));
-//	ret = put_video_frame_tx(frame_buf, width, height, time);
 	ret = vTxObj->putVideoFrameTx(frame_buf, width, height, time);
 	env->ReleaseByteArrayElements(frame, (jbyte*)frame_buf, JNI_ABORT);
 
@@ -111,7 +104,6 @@ media_log(MEDIA_LOG_DEBUG, LOG_TAG, "putVideoFrame vTxObj: %p, ", vTxObj);
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz)
 {
-	//return finish_video_tx();
 	if (vTxObj) {
 		delete vTxObj;
 		vTxObj = NULL;
@@ -137,17 +129,14 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 		return -1;
 	}
 
-	//ret = init_audio_tx(f, codec_id, sample_rate, bit_rate, payload_type);
 	enum CodecID codec_id;
 //TODO: throw exception
-	int ret2 = get_CodecID_from_AudioCodecTypeEnum(env, audioCodecType, &codec_id);
-media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
+	get_CodecID_from_AudioCodecTypeEnum(env, audioCodecType, &codec_id);
 	aTxObj = new AudioTx(f, codec_id, sample_rate, bit_rate, payload_type, audioMediaPort);
 
 	env->ReleaseStringUTFChars(outfile, f);
 
-//FIXME: add getFrameSize method
-	//return ret;
+//FIXME: add getFrameSize method to return it
 	return 160;
 }
 
@@ -159,7 +148,6 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 	int16_t *samples_buf;
 
 	samples_buf = (int16_t*)(env->GetShortArrayElements(samples, JNI_FALSE));
-//	ret = put_audio_samples_tx(samples_buf, n_samples, time);
 	ret = aTxObj->putAudioSamplesTx(samples_buf, n_samples, time);
 	env->ReleaseShortArrayElements(samples, samples_buf, 0);
 
@@ -173,6 +161,5 @@ Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass clazz)
 		delete aTxObj;
 		aTxObj = NULL;
 	}
-//	return finish_audio_tx();
 	return 0;
 }
