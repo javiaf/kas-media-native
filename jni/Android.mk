@@ -54,14 +54,17 @@ LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
 
 
 LOCAL_MODULE := android-media
-LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c $(MEDIA_SOURCES)/socket-manager.c \
+LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/init-media.c $(MEDIA_SOURCES)/my-cmdutils.c \
 			$(MEDIA_SOURCES)/util/log.c $(MEDIA_SOURCES)/util/utils.c \
 			$(MEDIA_SOURCES)/rx/sdp-manager.c \
 			jni/media/init-log.c \
-			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp jni/media/media-port-manager.c \
-			\
+			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp \
+			jni/media-oo/JNIMediaPortManager.cpp \
 			jni/media-oo/util/utils.c \
+			\
+			kc-media-native/media-oo/util/utils.c \
 			kc-media-native/media-oo/Media.cpp \
+			kc-media-native/media-oo/MediaPort.cpp kc-media-native/media-oo/MediaPortManager.cpp \
 			kc-media-native/media-oo/VideoTx.cpp kc-media-native/media-oo/AudioTx.cpp \
 			kc-media-native/media-oo/MediaRx.cpp \
 			kc-media-native/media-oo/VideoRx.cpp kc-media-native/media-oo/AudioRx.cpp

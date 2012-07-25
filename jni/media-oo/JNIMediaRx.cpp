@@ -16,11 +16,13 @@
  */
 
 extern "C" {
+#include <jni.h>
+
 #include <util/log.h>
 #include <init-log.h>
-#include <jni.h>
 }
 
+#include "MediaPortManager.h"
 #include <AudioRx.h>
 #include <VideoRx.h>
 
@@ -29,6 +31,9 @@ using namespace media;
 static char* LOG_TAG = "NDK-media-rx";
 static AudioRx *aRxObj;
 static VideoRx *vRxObj;
+
+extern MediaPort *audioMediaPort;
+extern MediaPort *videoMediaPort;
 
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
@@ -184,7 +189,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	android_frame_manager.release_decoded_frame =android_release_decoded_frame ;
 
 //	ret = start_video_rx(p_sdp, maxDelay, &android_frame_manager);
-	vRxObj = new VideoRx(p_sdp, maxDelay, &android_frame_manager);
+	vRxObj = new VideoRx(videoMediaPort, p_sdp, maxDelay, &android_frame_manager);
 	vRxObj->start();
 	ret = 0;
 
@@ -247,7 +252,7 @@ JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 				jstring sdp, jint maxDelay, jobject audioReceiver)
 {
-	int ret;
+	int ret = 0;
 	const char *p_sdp = NULL;
 
 	jclass cls = NULL;
@@ -297,7 +302,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	audio_receiver = audioReceiver;
 
 //	ret = start_audio_rx(p_sdp, maxDelay, &android_put_audio_samples_rx);
-	aRxObj = new AudioRx(p_sdp, maxDelay, &android_put_audio_samples_rx);
+	aRxObj = new AudioRx(audioMediaPort, p_sdp, maxDelay, &android_put_audio_samples_rx);
 	aRxObj->start();
 
 end:

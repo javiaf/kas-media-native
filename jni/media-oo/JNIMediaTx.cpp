@@ -16,13 +16,15 @@
  */
 
 extern "C" {
+#include <jni.h>
+
 #include <util/log.h>
 #include <init-log.h>
-#include <jni.h>
 
 #include "util/utils.h"
 }
 
+#include "MediaPortManager.h"
 #include <AudioTx.h>
 #include <VideoTx.h>
 
@@ -31,6 +33,9 @@ using namespace media;
 static char* LOG_TAG = "NDK-media-tx";
 static AudioTx *aTxObj;
 static VideoTx *vTxObj;
+
+extern MediaPort *audioMediaPort;
+extern MediaPort *videoMediaPort;
 
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
@@ -80,7 +85,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
 	vTxObj = new VideoTx(f, width, height, frame_rate_num, frame_rate_den,
 				bit_rate, gop_size, codec_id, payload_type,
-				PIX_FMT_NV21);
+				PIX_FMT_NV21, videoMediaPort);
 
 	env->ReleaseStringUTFChars(outfile, f);
 media_log(MEDIA_LOG_DEBUG, LOG_TAG, "initVideo vTxObj: %p, ", vTxObj);
@@ -137,7 +142,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 //TODO: throw exception
 	int ret2 = get_CodecID_from_AudioCodecTypeEnum(env, audioCodecType, &codec_id);
 media_log(MEDIA_LOG_DEBUG, LOG_TAG, "ret2: %d, ", ret2);
-	aTxObj = new AudioTx(f, codec_id, sample_rate, bit_rate, payload_type);
+	aTxObj = new AudioTx(f, codec_id, sample_rate, bit_rate, payload_type, audioMediaPort);
 
 	env->ReleaseStringUTFChars(outfile, f);
 
