@@ -33,10 +33,10 @@ FFMPEG_LIBS := $(addprefix $(MY_FFMPEG_SOURCE)/, \
 	libavutil/libavutil.a)
 
 LOCAL_CFLAGS += -Wall -pedantic -std=c99
+LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
 
 LOCAL_LDLIBS += $(FFMPEG_LIBS) $(MY_AMR_LDLIB) $(MY_X264_LDLIB) \
 		-llog -lc -lm -ldl -lgcc -lz
-
 
 LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MY_AMR_C_INCLUDE) \
@@ -45,10 +45,6 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MEDIA_INCLUDES)/util \
 			$(LOCAL_PATH)/jni/media \
 			$(LOCAL_PATH)/jni/media-oo
-
-
-LOCAL_CPPFLAGS += -D__STDC_CONSTANT_MACROS
-
 
 LOCAL_MODULE := android-media
 LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
