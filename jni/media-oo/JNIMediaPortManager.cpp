@@ -119,7 +119,7 @@ Java_com_kurento_kas_media_ports_MediaPortManager_takeMediaPortNative(
 	if (init_log() != 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
 
-	if (port < 0)
+	if (port < 1024)
 		mediaPort = MediaPortManager::takeMediaPort();
 	else
 		mediaPort = MediaPortManager::takeMediaPort(port);
