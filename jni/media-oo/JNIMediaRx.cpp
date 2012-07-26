@@ -32,9 +32,6 @@ static char* LOG_TAG = "NDK-media-rx";
 static AudioRx *aRxObj;
 static VideoRx *vRxObj;
 
-//extern MediaPort *audioMediaPort;
-//extern MediaPort *videoMediaPort;
-
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 				jlong videoMediaPortRef, jstring sdp, jint maxDelay, jobject videoReceiver);

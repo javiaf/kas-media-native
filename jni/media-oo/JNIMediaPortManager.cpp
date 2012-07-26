@@ -27,16 +27,6 @@ extern "C" {
 static char* LOG_TAG = "NDK-socket-manager";
 
 extern "C" {
-	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_takeAudioLocalPort(
-				JNIEnv* env, jclass clazz, jint audioPort);
-	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_releaseAudioLocalPort(
-						JNIEnv* env, jclass clazz);
-
-	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_takeVideoLocalPort(
-				JNIEnv* env, jclass clazz, jint videoPort);
-	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_releaseVideoLocalPort(
-						JNIEnv* env, jclass clazz);
-
 	JNIEXPORT jlong JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_takeMediaPortNative(
 				JNIEnv* env, jclass clazz, jint port);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_releaseMediaPortNative(
@@ -44,71 +34,6 @@ extern "C" {
 }
 
 using namespace media;
-
-MediaPort *audioMediaPort;
-MediaPort *videoMediaPort;
-
-JNIEXPORT jint JNICALL
-Java_com_kurento_kas_media_ports_MediaPortManager_takeAudioLocalPort(
-				JNIEnv* env, jclass clazz, jint audioPort) {
-	if (init_log() != 0)
-		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
-
-	if (audioPort < 0)
-		audioMediaPort = MediaPortManager::takeMediaPort();
-	else
-		audioMediaPort = MediaPortManager::takeMediaPort(audioPort);
-
-	return audioMediaPort->getPort();
-}
-
-JNIEXPORT jint JNICALL
-Java_com_kurento_kas_media_ports_MediaPortManager_releaseAudioLocalPort(
-						JNIEnv* env, jclass clazz) {
-	int ret = 0;
-
-	if (init_log() != 0)
-		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
-
-	if (audioMediaPort) {
-		ret = MediaPortManager::releaseMediaPort(audioMediaPort);
-		audioMediaPort = NULL;
-	}
-
-	return ret;
-}
-
-JNIEXPORT jint JNICALL
-Java_com_kurento_kas_media_ports_MediaPortManager_takeVideoLocalPort(
-				JNIEnv* env, jclass clazz, jint videoPort) {
-	if (init_log() != 0)
-		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
-
-	if (videoPort < 0)
-		videoMediaPort = MediaPortManager::takeMediaPort();
-	else
-		videoMediaPort = MediaPortManager::takeMediaPort(videoPort);
-
-	return videoMediaPort->getPort();
-}
-
-JNIEXPORT jint JNICALL
-Java_com_kurento_kas_media_ports_MediaPortManager_releaseVideoLocalPort(
-						JNIEnv* env, jclass clazz) {
-	int ret = 0;
-
-	if (init_log() != 0)
-		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
-
-	if (videoMediaPort) {
-		ret = MediaPortManager::releaseMediaPort(videoMediaPort);
-		videoMediaPort = NULL;
-	}
-
-	return ret;
-}
-
-////////////////////////////////////////////////////////////////////////////////
 
 JNIEXPORT jlong JNICALL
 Java_com_kurento_kas_media_ports_MediaPortManager_takeMediaPortNative(

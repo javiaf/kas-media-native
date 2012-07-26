@@ -33,10 +33,7 @@ using namespace media;
 static char* LOG_TAG = "NDK-media-tx";
 static AudioTx *aTxObj;
 static VideoTx *vTxObj;
-/*
-extern MediaPort *audioMediaPort;
-extern MediaPort *videoMediaPort;
-*/
+
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 				jstring outfile, jint width, jint height,
