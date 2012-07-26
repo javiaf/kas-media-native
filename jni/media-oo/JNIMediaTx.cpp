@@ -33,16 +33,17 @@ using namespace media;
 static char* LOG_TAG = "NDK-media-tx";
 static AudioTx *aTxObj;
 static VideoTx *vTxObj;
-
+/*
 extern MediaPort *audioMediaPort;
 extern MediaPort *videoMediaPort;
-
+*/
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 				jstring outfile, jint width, jint height,
 				jint frame_rate_num, jint frame_rate_den,
 				jint bit_rate, jint gop_size,
-				jobject videoCodecType, jint payload_type);
+				jobject videoCodecType, jint payload_type,
+				jlong videoMediaPortRef);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 				jbyteArray frame, jint width, jint height, jlong time);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz);
@@ -50,7 +51,7 @@ extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 					jstring outfile, jobject audioCodecType,
 					jint sample_rate, jint bit_rate,
-					jint payload_type);
+					jint payload_type, jlong audioMediaPortRef);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 				jshortArray samples, jint n_samples, jlong time);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass clazz);
@@ -61,10 +62,12 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 				jstring outfile, jint width, jint height,
 				jint frame_rate_num, jint frame_rate_den,
 				jint bit_rate, jint gop_size,
-				jobject videoCodecType, jint payload_type)
+				jobject videoCodecType, jint payload_type,
+				jlong videoMediaPortRef)
 {
 	int ret;
 	const char *f = NULL;
+	MediaPort *videoMediaPort;
 
 	if (init_log()!= 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -74,6 +77,8 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
 		return -1;
 	}
+
+	videoMediaPort = (MediaPort*)videoMediaPortRef;
 
 	enum CodecID codec_id;
 //TODO: throw exception
@@ -115,10 +120,11 @@ JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 					jstring outfile, jobject audioCodecType,
 					jint sample_rate, jint bit_rate,
-					jint payload_type)
+					jint payload_type, jlong audioMediaPortRef)
 {
 	int ret;
 	const char *f = NULL;
+	MediaPort *audioMediaPort;
 
 	if (init_log()!= 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -128,6 +134,8 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
 		return -1;
 	}
+
+	audioMediaPort = (MediaPort*)audioMediaPortRef;
 
 	enum CodecID codec_id;
 //TODO: throw exception

@@ -36,6 +36,11 @@ extern "C" {
 				JNIEnv* env, jclass clazz, jint videoPort);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_releaseVideoLocalPort(
 						JNIEnv* env, jclass clazz);
+
+	JNIEXPORT jlong JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_takeMediaPortNative(
+				JNIEnv* env, jclass clazz, jint port);
+	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_ports_MediaPortManager_releaseMediaPortNative(
+				JNIEnv* env, jclass clazz, jlong mediaPortRef);
 }
 
 using namespace media;
@@ -99,6 +104,42 @@ Java_com_kurento_kas_media_ports_MediaPortManager_releaseVideoLocalPort(
 		ret = MediaPortManager::releaseMediaPort(videoMediaPort);
 		videoMediaPort = NULL;
 	}
+
+	return ret;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+JNIEXPORT jlong JNICALL
+Java_com_kurento_kas_media_ports_MediaPortManager_takeMediaPortNative(
+				JNIEnv* env, jclass clazz, jint port)
+{
+	MediaPort *mediaPort = NULL;
+
+	if (init_log() != 0)
+		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
+
+	if (port < 0)
+		mediaPort = MediaPortManager::takeMediaPort();
+	else
+		mediaPort = MediaPortManager::takeMediaPort(port);
+
+	return (long)mediaPort;
+}
+
+JNIEXPORT jint JNICALL
+Java_com_kurento_kas_media_ports_MediaPortManager_releaseMediaPortNative(
+				JNIEnv* env, jclass clazz, jlong mediaPortRef)
+{
+	int ret = 0;
+	MediaPort *mediaPort;
+
+	if (init_log() != 0)
+		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
+
+	mediaPort = (MediaPort*)mediaPortRef;
+	if (mediaPort)
+		ret = MediaPortManager::releaseMediaPort(mediaPort);
 
 	return ret;
 }

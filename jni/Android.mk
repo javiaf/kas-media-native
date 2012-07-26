@@ -57,7 +57,7 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
 			\
 			jni/media/init-log.c \
 			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp \
-			jni/media-oo/JNIMediaPortManager.cpp \
+			jni/media-oo/JNIMediaPort.cpp jni/media-oo/JNIMediaPortManager.cpp \
 			jni/media-oo/util/utils.c
 
 include $(BUILD_SHARED_LIBRARY)
