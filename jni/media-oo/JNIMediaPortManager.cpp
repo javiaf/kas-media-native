@@ -50,9 +50,9 @@ Java_com_kurento_kas_media_ports_MediaPortManager_takeAudioLocalPort(
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
 
 	if (audioPort < 0)
-		audioMediaPort = MediaPortManager::createMediaPort();
+		audioMediaPort = MediaPortManager::takeMediaPort();
 	else
-		audioMediaPort = MediaPortManager::createMediaPort(audioPort);
+		audioMediaPort = MediaPortManager::takeMediaPort(audioPort);
 
 	return audioMediaPort->getPort();
 }
@@ -80,9 +80,9 @@ Java_com_kurento_kas_media_ports_MediaPortManager_takeVideoLocalPort(
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
 
 	if (videoPort < 0)
-		videoMediaPort = MediaPortManager::createMediaPort();
+		videoMediaPort = MediaPortManager::takeMediaPort();
 	else
-		videoMediaPort = MediaPortManager::createMediaPort(videoPort);
+		videoMediaPort = MediaPortManager::takeMediaPort(videoPort);
 
 	return videoMediaPort->getPort();
 }
