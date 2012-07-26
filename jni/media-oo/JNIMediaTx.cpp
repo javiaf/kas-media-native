@@ -141,8 +141,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 
 	env->ReleaseStringUTFChars(outfile, f);
 
-//FIXME: add getFrameSize method to return it
-	return 160;
+	return aTxObj->getFrameSize();
 }
 
 JNIEXPORT jint JNICALL
