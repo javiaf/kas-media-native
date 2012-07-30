@@ -189,8 +189,14 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 
 	videoMediaPort = (MediaPort*)videoMediaPortRef;
 
-	vRxObj = new VideoRx(videoMediaPort, p_sdp, maxDelay, &android_frame_manager);
-	vRxObj->start();
+	try {
+		vRxObj = new VideoRx(videoMediaPort, p_sdp, maxDelay, &android_frame_manager);
+		vRxObj->start();
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "exception: %s", e.what());
+	}
+
 	ret = 0;
 
 end:
@@ -303,9 +309,13 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	audio_receiver = audioReceiver;
 	audioMediaPort = (MediaPort*)audioMediaPortRef;
 
-	aRxObj = new AudioRx(audioMediaPort, p_sdp, maxDelay, &android_put_audio_samples_rx);
-	aRxObj->start();
-
+	try {
+		aRxObj = new AudioRx(audioMediaPort, p_sdp, maxDelay, &android_put_audio_samples_rx);
+		aRxObj->start();
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "exception %p: %s", &e, e.what());
+	}
 end:
 	env->DeleteLocalRef(cls);
 	env->DeleteLocalRef(audio_receiver);
