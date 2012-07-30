@@ -49,7 +49,7 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 LOCAL_MODULE := android-media
 LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
 			$(MEDIA_SOURCES)/util/sdp-manager.c \
-			$(MEDIA_SOURCES)/Media.cpp \
+			$(MEDIA_SOURCES)/Media.cpp $(MEDIA_SOURCES)/MediaException.cpp\
 			$(MEDIA_SOURCES)/MediaPort.cpp $(MEDIA_SOURCES)/MediaPortManager.cpp \
 			$(MEDIA_SOURCES)/VideoTx.cpp $(MEDIA_SOURCES)/AudioTx.cpp \
 			$(MEDIA_SOURCES)/MediaRx.cpp \
