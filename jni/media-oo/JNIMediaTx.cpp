@@ -103,6 +103,11 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 	int ret;
 	uint8_t* frame_buf;
 
+	if (!vTxObj) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "No video-tx initiated");
+		return -1;
+	}
+
 	ret = 0;
 	frame_buf = (uint8_t*)(env->GetByteArrayElements(frame, JNI_FALSE));
 	try {
@@ -172,6 +177,11 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 {
 	int ret;
 	int16_t *samples_buf;
+
+	if (!aTxObj) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "No audio-tx initiated");
+		return -1;
+	}
 
 	samples_buf = (int16_t*)(env->GetShortArrayElements(samples, JNI_FALSE));
 	try {
