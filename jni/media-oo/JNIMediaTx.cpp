@@ -66,6 +66,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	const char *f = NULL;
 	MediaPort *videoMediaPort;
 
+	ret = 0;
 	if (init_log()!= 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
 
@@ -80,13 +81,19 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	enum CodecID codec_id;
 //TODO: throw exception
 	get_CodecID_from_VideoCodecTypeEnum(env, videoCodecType, &codec_id);
-	vTxObj = new VideoTx(f, width, height, frame_rate_num, frame_rate_den,
+	try {
+		vTxObj = new VideoTx(f, width, height, frame_rate_num, frame_rate_den,
 				bit_rate, gop_size, codec_id, payload_type,
 				PIX_FMT_NV21, videoMediaPort);
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+		ret = -1;
+	}
 
 	env->ReleaseStringUTFChars(outfile, f);
 
-	return 0;
+	return ret;
 }
 
 JNIEXPORT jint JNICALL
@@ -95,9 +102,16 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 {
 	int ret;
 	uint8_t* frame_buf;
-media_log(MEDIA_LOG_DEBUG, LOG_TAG, "putVideoFrame vTxObj: %p, ", vTxObj);
+
+	ret = 0;
 	frame_buf = (uint8_t*)(env->GetByteArrayElements(frame, JNI_FALSE));
-	ret = vTxObj->putVideoFrameTx(frame_buf, width, height, time);
+	try {
+		ret = vTxObj->putVideoFrameTx(frame_buf, width, height, time);
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+		ret = -1;
+	}
 	env->ReleaseByteArrayElements(frame, (jbyte*)frame_buf, JNI_ABORT);
 
 	return ret;
@@ -137,11 +151,19 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 	enum CodecID codec_id;
 //TODO: throw exception
 	get_CodecID_from_AudioCodecTypeEnum(env, audioCodecType, &codec_id);
-	aTxObj = new AudioTx(f, codec_id, sample_rate, bit_rate, payload_type, audioMediaPort);
+	try {
+		aTxObj = new AudioTx(f, codec_id, sample_rate, bit_rate,
+						payload_type, audioMediaPort);
+		ret = aTxObj->getFrameSize();
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+		ret = -1;
+	}
 
 	env->ReleaseStringUTFChars(outfile, f);
 
-	return aTxObj->getFrameSize();
+	return ret;
 }
 
 JNIEXPORT jint JNICALL
@@ -152,7 +174,13 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 	int16_t *samples_buf;
 
 	samples_buf = (int16_t*)(env->GetShortArrayElements(samples, JNI_FALSE));
-	ret = aTxObj->putAudioSamplesTx(samples_buf, n_samples, time);
+	try {
+		ret = aTxObj->putAudioSamplesTx(samples_buf, n_samples, time);
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+		ret = -1;
+	}
 	env->ReleaseShortArrayElements(samples, samples_buf, 0);
 
 	return ret;
