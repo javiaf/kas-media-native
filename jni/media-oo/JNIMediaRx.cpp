@@ -32,6 +32,9 @@ static char* LOG_TAG = "NDK-media-rx";
 static AudioRx *aRxObj;
 static VideoRx *vRxObj;
 
+static Lock mutexAudioRx;
+static Lock mutexVideoRx;
+
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 				jlong videoMediaPortRef, jstring sdp, jint maxDelay, jobject videoReceiver);
@@ -52,6 +55,7 @@ enum {
 };
 
 static DecodedFrame df;
+static int df_used;
 
 static int current_width, current_height;
 
@@ -95,6 +99,7 @@ android_get_decoded_frame(int width, int height)
 	video_env->ReleaseIntArrayElements((jintArray)df.priv_data, (jint*)(df.buffer), 0);
 	avpicture_fill((AVPicture*) df.pFrameRGB, df.buffer,
 				(enum PixelFormat)ANDROID_PIX_FMT, width, height);
+	df_used = 1;
 
 	return &df;
 }
@@ -102,9 +107,13 @@ android_get_decoded_frame(int width, int height)
 static void
 android_release_decoded_frame(void)
 {
+	if (!df_used)
+		return;
 	video_env->DeleteLocalRef((jintArray)df.priv_data);
 	av_free(df.pFrameRGB);
 }
+
+static FrameManager android_frame_manager;
 
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
@@ -114,6 +123,8 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	int ret;
 	const char *p_sdp = NULL;
 	MediaPort *videoMediaPort;
+
+	mutexVideoRx.lock();
 
 	jclass cls = NULL;
 
@@ -132,6 +143,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	p_sdp = env->GetStringUTFChars(sdp, NULL);
 	if (p_sdp == NULL) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		mutexVideoRx.unlock();
 		return -1;
 	}
 
@@ -181,11 +193,10 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 		goto end;
 	}
 
-	FrameManager android_frame_manager;
 	android_frame_manager.pix_fmt = (enum PixelFormat)ANDROID_PIX_FMT;
 	android_frame_manager.put_video_frame_rx = android_put_video_frame_rx;
 	android_frame_manager.get_decoded_frame = android_get_decoded_frame;
-	android_frame_manager.release_decoded_frame =android_release_decoded_frame ;
+	android_frame_manager.release_decoded_frame = android_release_decoded_frame;
 
 	videoMediaPort = (MediaPort*)videoMediaPortRef;
 
@@ -194,7 +205,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 		vRxObj->start();
 	}
 	catch(MediaException &e) {
-		media_log(MEDIA_LOG_ERROR, LOG_TAG, "exception: %s", e.what());
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
 	}
 
 	ret = 0;
@@ -203,7 +214,7 @@ end:
 	env->DeleteLocalRef(cls);
 	env->DeleteLocalRef(VideoFrame_class);
 	env->ReleaseStringUTFChars(sdp, p_sdp);
-
+	mutexVideoRx.unlock();
 	return ret;
 }
 
@@ -212,8 +223,10 @@ Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz)
 {
 	if (vRxObj) {
 		vRxObj->stop();
+		mutexVideoRx.lock();
 		delete vRxObj;
 		vRxObj = NULL;
+		mutexVideoRx.unlock();
 	}
 	return 0;
 }
@@ -264,6 +277,8 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 
 	jclass cls = NULL;
 
+	mutexAudioRx.lock();
+
 	audio_mid = NULL;
 	AudioSamples_init_mid = NULL;
 	audio_receiver = NULL;
@@ -275,6 +290,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	p_sdp = env->GetStringUTFChars(sdp, NULL);
 	if (p_sdp == NULL) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		mutexAudioRx.unlock();
 		return -1;
 	}
 
@@ -314,14 +330,14 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 		aRxObj->start();
 	}
 	catch(MediaException &e) {
-		media_log(MEDIA_LOG_ERROR, LOG_TAG, "exception %p: %s", &e, e.what());
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
 	}
 end:
 	env->DeleteLocalRef(cls);
 	env->DeleteLocalRef(audio_receiver);
 	env->DeleteLocalRef(AudioSamples_class);
 	env->ReleaseStringUTFChars(sdp, p_sdp);
-
+	mutexAudioRx.unlock();
 	return ret;
 }
 
@@ -330,8 +346,10 @@ Java_com_kurento_kas_media_rx_MediaRx_stopAudioRx(JNIEnv* env, jclass clazz)
 {
 	if (aRxObj) {
 		aRxObj->stop();
+		mutexAudioRx.lock();
 		delete aRxObj;
 		aRxObj = NULL;
+		mutexAudioRx.unlock();
 	}
 	return 0;
 }

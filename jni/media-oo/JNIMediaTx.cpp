@@ -34,6 +34,9 @@ static char* LOG_TAG = "NDK-media-tx";
 static AudioTx *aTxObj;
 static VideoTx *vTxObj;
 
+static Lock mutexAudioTx;
+static Lock mutexVideoTx;
+
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 				jstring outfile, jint width, jint height,
@@ -66,6 +69,8 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	const char *f = NULL;
 	MediaPort *videoMediaPort;
 
+	mutexVideoTx.lock();
+
 	ret = 0;
 	if (init_log()!= 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -73,6 +78,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	f = env->GetStringUTFChars(outfile, NULL);
 	if (f == NULL) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		mutexVideoTx.unlock();
 		return -1;
 	}
 
@@ -92,7 +98,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	}
 
 	env->ReleaseStringUTFChars(outfile, f);
-
+	mutexVideoTx.unlock();
 	return ret;
 }
 
@@ -105,6 +111,7 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 
 	if (!vTxObj) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "No video-tx initiated");
+		mutexVideoTx.unlock();
 		return -1;
 	}
 
@@ -118,17 +125,19 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 		ret = -1;
 	}
 	env->ReleaseByteArrayElements(frame, (jbyte*)frame_buf, JNI_ABORT);
-
+	mutexVideoTx.unlock();
 	return ret;
 }
 
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz)
 {
+	mutexVideoTx.lock();
 	if (vTxObj) {
 		delete vTxObj;
 		vTxObj = NULL;
 	}
+	mutexVideoTx.unlock();
 	return 0;
 }
 
@@ -142,12 +151,15 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 	const char *f = NULL;
 	MediaPort *audioMediaPort;
 
+	mutexAudioTx.lock();
+
 	if (init_log()!= 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
 
 	f = env->GetStringUTFChars(outfile, NULL);
 	if (f == NULL) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		mutexAudioTx.unlock();
 		return -1;
 	}
 
@@ -167,7 +179,7 @@ Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 	}
 
 	env->ReleaseStringUTFChars(outfile, f);
-
+	mutexAudioTx.unlock();
 	return ret;
 }
 
@@ -178,8 +190,10 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 	int ret;
 	int16_t *samples_buf;
 
+	mutexAudioTx.lock();
 	if (!aTxObj) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG, "No audio-tx initiated");
+		mutexAudioTx.unlock();
 		return -1;
 	}
 
@@ -192,16 +206,18 @@ Java_com_kurento_kas_media_tx_MediaTx_putAudioSamples(JNIEnv* env, jclass clazz,
 		ret = -1;
 	}
 	env->ReleaseShortArrayElements(samples, samples_buf, 0);
-
+	mutexAudioTx.unlock();
 	return ret;
 }
 
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_finishAudio(JNIEnv* env, jclass clazz)
 {
+	mutexAudioTx.lock();
 	if (aTxObj) {
 		delete aTxObj;
 		aTxObj = NULL;
 	}
+	mutexAudioTx.unlock();
 	return 0;
 }
