@@ -136,6 +136,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	VideoFrame_init_mid = NULL;
 	video_receiver = NULL;
 	VideoFrame_class = NULL;
+	jclass localRefCls = NULL;
 
 	if (init_log() != 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -164,10 +165,18 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 		goto end;
 	}
 
-	VideoFrame_class = env->FindClass("com/kurento/kas/media/rx/VideoFrame");
-	if (!VideoFrame_class) {
+	localRefCls = env->FindClass("com/kurento/kas/media/rx/VideoFrame");
+	if (!localRefCls) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG,
 				"com/kurento/kas/media/rx/VideoFrame not found");
+		ret = -4;
+		goto end;
+	}
+	VideoFrame_class = reinterpret_cast<jclass>(env->NewGlobalRef(localRefCls));
+	env->DeleteLocalRef(localRefCls);
+	if (!VideoFrame_class) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+				"VideoFrame_class global ref error.");
 		ret = -4;
 		goto end;
 	}
@@ -181,7 +190,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	}
 
 	video_env = env;
-	video_receiver = videoReceiver;
+	video_receiver = env->NewGlobalRef(videoReceiver);
 
 	//Allocate AVFrame structure
 	df.width = 0;
@@ -212,7 +221,8 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 
 end:
 	env->DeleteLocalRef(cls);
-	env->DeleteLocalRef(VideoFrame_class);
+	env->DeleteGlobalRef(VideoFrame_class);
+	env->DeleteGlobalRef(video_receiver);
 	env->ReleaseStringUTFChars(sdp, p_sdp);
 	mutexVideoRx.unlock();
 	return ret;
@@ -283,6 +293,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	AudioSamples_init_mid = NULL;
 	audio_receiver = NULL;
 	AudioSamples_class = NULL;
+	jclass localRefCls = NULL;
 
 	if (init_log() != 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -305,10 +316,18 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 		goto end;
 	}
 
-	AudioSamples_class = env->FindClass("com/kurento/kas/media/rx/AudioSamples");
-	if (!AudioSamples_class) {
+	localRefCls = env->FindClass("com/kurento/kas/media/rx/AudioSamples");
+	if (!localRefCls) {
 		media_log(MEDIA_LOG_ERROR, LOG_TAG,
 				"com/kurento/kas/media/rx/AudioSamples not found");
+		ret = -3;
+		goto end;
+	}
+	AudioSamples_class = reinterpret_cast<jclass>(env->NewGlobalRef(localRefCls));
+	env->DeleteLocalRef(localRefCls);
+	if (!AudioSamples_class) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+				"AudioSamples_class global ref error.");
 		ret = -3;
 		goto end;
 	}
@@ -322,7 +341,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	}
 
 	audio_env = env;
-	audio_receiver = audioReceiver;
+	audio_receiver = env->NewGlobalRef(audioReceiver);
 	audioMediaPort = (MediaPort*)audioMediaPortRef;
 
 	try {
@@ -334,8 +353,8 @@ Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
 	}
 end:
 	env->DeleteLocalRef(cls);
-	env->DeleteLocalRef(audio_receiver);
-	env->DeleteLocalRef(AudioSamples_class);
+	env->DeleteGlobalRef(AudioSamples_class);
+	env->DeleteGlobalRef(audio_receiver);
 	env->ReleaseStringUTFChars(sdp, p_sdp);
 	mutexAudioRx.unlock();
 	return ret;
