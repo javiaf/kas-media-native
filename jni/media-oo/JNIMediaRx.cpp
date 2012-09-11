@@ -56,8 +56,28 @@ enum {
 
 static DecodedFrame df;
 static int df_used;
+static int receive;
+static Lock mutexReceive;
 
 static int current_width, current_height;
+
+static int
+get_receive()
+{
+	int r;
+	mutexReceive.lock();
+	r = receive;
+	mutexReceive.unlock();
+	return r;
+}
+
+static void
+set_receive(int r)
+{
+	mutexReceive.lock();
+	receive = r;
+	mutexReceive.unlock();
+}
 
 static jobject
 create_videoframe_obj(JNIEnv *env, DecodedFrame *df)
@@ -85,12 +105,18 @@ static DecodedFrame*
 android_get_decoded_frame(int width, int height)
 {
 	int picture_nbytes;
+	jintArray intArray = NULL;
+
+	if (!get_receive())
+		return NULL;
 
 	// Determine required picture size
 	picture_nbytes = avpicture_get_size((enum PixelFormat)ANDROID_PIX_FMT, width, height);
 	video_env->DeleteGlobalRef((jintArray)df.priv_data);
-	jintArray intArray = (jintArray)video_env->CallObjectMethod(video_receiver,
+	intArray = (jintArray)video_env->CallObjectMethod(video_receiver,
 					get_frame_buffer_mid, picture_nbytes);
+	if (!intArray)
+		return NULL;
 	df.priv_data = video_env->NewGlobalRef(intArray);
 	video_env->DeleteLocalRef(intArray);
 	if (!df.priv_data)
@@ -110,8 +136,8 @@ android_release_decoded_frame(void)
 {
 	if (!df_used)
 		return;
-	video_env->DeleteGlobalRef((jintArray)df.priv_data);
 	av_free(df.pFrameRGB);
+	df_used = 0;
 }
 
 static FrameManager android_frame_manager;
@@ -212,6 +238,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 
 	try {
 		vRxObj = new VideoRx(videoMediaPort, p_sdp, maxDelay, &android_frame_manager);
+		set_receive(1);
 		vRxObj->start();
 	}
 	catch(MediaException &e) {
@@ -221,6 +248,8 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 	ret = 0;
 
 end:
+	video_env->DeleteGlobalRef((jintArray)df.priv_data);
+
 	env->DeleteLocalRef(cls);
 	env->DeleteGlobalRef(VideoFrame_class);
 	env->DeleteGlobalRef(video_receiver);
@@ -232,10 +261,11 @@ end:
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz)
 {
-	video_env = env;
 	if (vRxObj) {
 		vRxObj->stop();
 		mutexVideoRx.lock();
+		set_receive(0);
+		video_env = env;
 		delete vRxObj;
 		vRxObj = NULL;
 		mutexVideoRx.unlock();
