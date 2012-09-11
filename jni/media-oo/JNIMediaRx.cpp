@@ -88,10 +88,11 @@ android_get_decoded_frame(int width, int height)
 
 	// Determine required picture size
 	picture_nbytes = avpicture_get_size((enum PixelFormat)ANDROID_PIX_FMT, width, height);
-
-	video_env->DeleteLocalRef((jintArray)df.priv_data);
-	df.priv_data = (jintArray)video_env->CallObjectMethod(video_receiver,
+	video_env->DeleteGlobalRef((jintArray)df.priv_data);
+	jintArray intArray = (jintArray)video_env->CallObjectMethod(video_receiver,
 					get_frame_buffer_mid, picture_nbytes);
+	df.priv_data = video_env->NewGlobalRef(intArray);
+	video_env->DeleteLocalRef(intArray);
 	if (!df.priv_data)
 		return NULL;
 
@@ -109,7 +110,7 @@ android_release_decoded_frame(void)
 {
 	if (!df_used)
 		return;
-	video_env->DeleteLocalRef((jintArray)df.priv_data);
+	video_env->DeleteGlobalRef((jintArray)df.priv_data);
 	av_free(df.pFrameRGB);
 }
 
@@ -231,6 +232,7 @@ end:
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz)
 {
+	video_env = env;
 	if (vRxObj) {
 		vRxObj->stop();
 		mutexVideoRx.lock();
