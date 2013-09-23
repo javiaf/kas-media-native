@@ -46,7 +46,7 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(LOCAL_PATH)/jni/media \
 			$(LOCAL_PATH)/jni/media-oo
 
-LOCAL_MODULE := android-media
+LOCAL_MODULE := kas-media-native
 LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
 			$(MEDIA_SOURCES)/util/sdp-manager.c \
 			$(MEDIA_SOURCES)/Media.cpp $(MEDIA_SOURCES)/MediaException.cpp\
