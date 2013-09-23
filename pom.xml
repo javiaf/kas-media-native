@@ -79,8 +79,8 @@
 
 			<plugin>
 				<groupId>com.jayway.maven.plugins.android.generation2</groupId>
-				<artifactId>maven-android-plugin</artifactId>
-				<version>3.0.0-alpha-2</version>
+				<artifactId>android-maven-plugin</artifactId>
+				<version>3.6.1</version>
 				<executions>
 					<execution>
 						<goals>
@@ -89,6 +89,7 @@
 						<configuration>
 							<clearNativeArtifacts>false</clearNativeArtifacts>
 							<attachNativeArtifacts>true</attachNativeArtifacts>
+							<target>all</target>
 						</configuration>
 					</execution>
 				</executions>
