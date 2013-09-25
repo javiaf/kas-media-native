@@ -22,7 +22,6 @@ export CC="$abi-gcc"
 export CXX="$abi-g++"
 export CFLAGS="$MY_CFLAGS"
 export CXXFLAGS="$MY_CFLAGS"
-export LDFLAGS="$MY_LDFLAGS -lsupc++ "
 
 ./configure --prefix=$MY_AMR_INSTALL --host=arm
 

@@ -1,29 +1,35 @@
 LOCAL_PATH := $(NDK_PROJECT_PATH)
 include $(CLEAR_VARS)
 
+PROJECT_PATH = $(PWD)
+
 MEDIA_SOURCES := kc-media-native/media-oo
-MEDIA_INCLUDES := $(NDK_PROJECT_PATH)/$(MEDIA_SOURCES)
-export EXTERNAL := $(NDK_PROJECT_PATH)/kc-media-native/external
+MEDIA_INCLUDES := $(PROJECT_PATH)/$(MEDIA_SOURCES)
+KC_MEDIA_NATIVE_PATH := $(PROJECT_PATH)/kc-media-native
+EXTERNAL := $(KC_MEDIA_NATIVE_PATH)/external
 
-export MY_FFMPEG_SOURCE := $(EXTERNAL)/ffmpeg
-export MY_FFMPEG_INSTALL := $(MY_FFMPEG_SOURCE)
+MY_FFMPEG_SOURCE := $(EXTERNAL)/ffmpeg
+MY_FFMPEG_INSTALL := $(MY_FFMPEG_SOURCE)
 
-export MY_AMR_INSTALL := $(NDK_PROJECT_PATH)/jni/target/opencore-amr_install
-export MY_AMR_C_INCLUDE := $(MY_AMR_INSTALL)/include
-export MY_AMR_LDLIB := -L$(MY_AMR_INSTALL)/lib -lopencore-amrnb
+MY_AMR_INSTALL := $(PROJECT_PATH)/jni/target/opencore-amr_install
+MY_AMR_C_INCLUDE := $(MY_AMR_INSTALL)/include
+MY_AMR_LDLIB := -L$(MY_AMR_INSTALL)/lib -lopencore-amrnb
+
 
 ifdef ENABLE_X264
-	export MY_X264_INSTALL := $(NDK_PROJECT_PATH)/jni/target/x264_install
+	export MY_X264_INSTALL := $(PROJECT_PATH)/jni/target/x264_install
 	export MY_X264_C_INCLUDE := $(MY_X264_INSTALL)/include
 	export MY_X264_LDLIB := -L$(MY_X264_INSTALL)/lib -lx264
 	LOCAL_CFLAGS += -DUSE_X264
 endif
 
-RESULT := $(shell export EXTERNAL=$(EXTERNAL); \
+RESULT := $(shell export PROJECT_PATH=$(PROJECT_PATH); \
+		export KC_MEDIA_NATIVE_PATH=$(KC_MEDIA_NATIVE_PATH); \
+		export EXTERNAL=$(EXTERNAL); \
 		export MY_FFMPEG_INSTALL=$(MY_FFMPEG_INSTALL); \
 		export MY_AMR_INSTALL=$(MY_AMR_INSTALL); \
 		export MY_X264_INSTALL=$(MY_X264_INSTALL); \
-		$(NDK_PROJECT_PATH)/jni/configure-make-all.sh)
+		$(PROJECT_PATH)/jni/configure-make-all.sh)
 
 # These need to be in the right order
 FFMPEG_LIBS := $(addprefix $(MY_FFMPEG_SOURCE)/, \

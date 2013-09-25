@@ -8,14 +8,25 @@ if [ "" == "$ANDROID_NDK_HOME" ]; then
   exit -1;
 fi
 
+function update_submodule {
+  pushd $1
+  git submodule init
+  git submodule sync
+  git submodule update
+  popd
+}
+
+update_submodule $PROJECT_PATH
+update_submodule $KC_MEDIA_NATIVE_PATH
+
 pushd `dirname $0`
 
 TARGET_DIR=$PWD/target
 MARK_FILE=$TARGET_DIR/config.mark
 
-export armelf=armelf_linux_eabi.x;
 export abi=arm-linux-androideabi;
-export gccvers=4.4.3
+export gccvers=4.8
+SYSTEM_NAME=linux-x86_64
 export TOOLCHAIN_DIR=$TARGET_DIR/toolchain
 
 export PATH=$PATH:$TOOLCHAIN_DIR:$TOOLCHAIN_DIR/bin
@@ -31,12 +42,11 @@ export MY_CFLAGS="-I$ARM_INC -DANDROID -fpic -mthumb-interwork -ffunction-sectio
 		-funwind-tables -fstack-protector -fno-short-enums $armarch \
 		-Wno-psabi -msoft-float -mthumb -Os -O -fomit-frame-pointer \
 		-fno-strict-aliasing -finline-limit=64 -Wa,--noexecstack -MMD -MP "
+#export MY_LDFLAGS=""
 export MY_LDFLAGS="-L$ARM_LIBO -nostdlib -Bdynamic  -Wl,--no-undefined -Wl,-z,noexecstack \
 		-Wl,-z,nocopyreloc -Wl,-soname,/system/lib/libz.so \
 		-Wl,-rpath-link=$PLATFORM/usr/lib,-dynamic-linker=/system/bin/linker \
-		-L$ARM_LIB  -lc -lm -ldl -Wl,--library-path=$PLATFORM/usr/lib/ \
-		-Xlinker $TOOLCHAIN_DIR/sysroot/usr/lib/crtbegin_dynamic.o -Xlinker \
-		$TOOLCHAIN_DIR/sysroot/usr/lib/crtend_android.o "
+		-L$ARM_LIB  -lc -lm -ldl -Wl,--library-path=$PLATFORM/usr/lib/ "
 
 if [ "" == "$ENABLE_X264" ]; then
   ENABLE_X264="NO"
@@ -62,9 +72,6 @@ then
   exit 0
 fi
 
-
-echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" > $MARK_FILE
-echo "ENABLE_X264=$ENABLE_X264" >> $MARK_FILE
 echo "NDK version: $(cat $ANDROID_NDK_HOME/RELEASE.TXT); ABI version: $abi-$gccvers";
 
 mkdir -p $TARGET_DIR
@@ -73,11 +80,11 @@ $ANDROID_NDK_HOME/build/tools/make-standalone-toolchain.sh \
 	--install-dir=$TOOLCHAIN_DIR \
 	--toolchain=$abi-$gccvers \
 	--ndk-dir=$ANDROID_NDK_HOME \
-	--system=linux-x86 \
+	--system=$SYSTEM_NAME \
 	--platform=android-8
 
 function die {
-  echo "$1 failed" && exit -1
+  echo "$1 failed" && rm $MARK_FILE && exit -1
 }
 
 echo "+++++++++++++++++++++++++++++++++++++++++++"
@@ -107,7 +114,7 @@ else
   X264_LIB_INC=$MY_X264_INSTALL/include;
   X264_LIB_LIB=$MY_X264_INSTALL/lib;
   export X264_C_EXTRA="-I$X264_LIB_INC ";
-  export X264_LD_EXTRA="-L$X264_LIB_LIB -rpath-link=$X264_LIB_LIB ";
+  export X264_LD_EXTRA="-L$X264_LIB_LIB -Wl,-rpath-link=$X264_LIB_LIB ";
   export X264_L="-lx264";
   export X264_CONFIGURE_OPTS='--enable-gpl --enable-libx264 --enable-encoder=libx264';
   ./configure-make-x264.sh || die "configure-make-x264"
@@ -123,4 +130,7 @@ echo "run configure-make-ffmpeg.sh"
 echo "+++++++++++++++++++++++++++++++++++++++++++"
 
 popd
+
+echo "ANDROID_NDK_HOME=$ANDROID_NDK_HOME" > $MARK_FILE
+echo "ENABLE_X264=$ENABLE_X264" >> $MARK_FILE
 
