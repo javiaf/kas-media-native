@@ -43,7 +43,6 @@ LOCAL_C_INCLUDES := 	$(MY_FFMPEG_INSTALL) \
 			$(MY_X264_C_INCLUDE) \
 			$(MEDIA_INCLUDES) \
 			$(MEDIA_INCLUDES)/util \
-			$(LOCAL_PATH)/jni/media \
 			$(LOCAL_PATH)/jni/media-oo
 
 LOCAL_MODULE := kas-media-native
@@ -55,7 +54,7 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
 			$(MEDIA_SOURCES)/MediaRx.cpp \
 			$(MEDIA_SOURCES)/VideoRx.cpp $(MEDIA_SOURCES)/AudioRx.cpp \
 			\
-			jni/media/init-log.c \
+			jni/media-oo/init-log.c \
 			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp \
 			jni/media-oo/JNIMediaPort.cpp jni/media-oo/JNIMediaPortManager.cpp \
 			jni/media-oo/util/utils.c
