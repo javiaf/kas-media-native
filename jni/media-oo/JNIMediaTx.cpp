@@ -1,16 +1,18 @@
 /*
- * (C) Copyright 2013 Kurento (http://kurento.org/)
+ * Kurento Android Media: Android Media Library based on FFmpeg.
+ * Copyright (C) 2011  Tikal Technologies
  *
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the GNU Lesser General Public License
- * (LGPL) version 2.1 which accompanies this distribution, and is available at
- * http://www.gnu.org/licenses/lgpl-2.1.html
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License version 3
+ * as published by the Free Software Foundation.
  *
- * This library is distributed in the hope that it will be useful,
+ * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the GNU
- * Lesser General Public License for more details.
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 extern "C" {
@@ -32,6 +34,8 @@ static char* LOG_TAG = "NDK-media-tx";
 static AudioTx *aTxObj;
 static VideoTx *vTxObj;
 
+static jobject jEncObj;
+
 static Lock mutexAudioTx;
 static Lock mutexVideoTx;
 
@@ -42,9 +46,20 @@ extern "C" {
 				jint bit_rate, jint gop_size,
 				jobject videoCodecType, jint payload_type,
 				jlong videoMediaPortRef);
+
+	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideoJava(JNIEnv* env,
+				jclass clazz, jstring outfile, jint width, jint height,
+				jint frame_rate_num, jint frame_rate_den, jint bit_rate,
+				jint gop_size, jint payload_type, jlong videoMediaPortRef,
+				jstring jmimetype, jstring jcodec, jstring jcolor);
+
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 				jbyteArray frame, jint width, jint height, jlong time);
+	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrameJava(JNIEnv* env,
+			jclass clazz, jbyteArray frame, jint width, jint height, jlong time);
+
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz);
+	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_finishVideoJava(JNIEnv* env, jclass clazz);
 
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initAudio(JNIEnv* env, jclass clazz,
 					jstring outfile, jobject audioCodecType,
@@ -100,6 +115,65 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	return ret;
 }
 
+/*
+ * init vTxObj & jEncObj (Java Android Encoder Object)
+ * params jmimetype, jcolor & jcodec used by jEncObj
+ * */
+
+JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideoJava(JNIEnv* env,
+			jclass clazz, jstring outfile, jint width, jint height,
+			jint frame_rate_num, jint frame_rate_den, jint bit_rate,
+			jint gop_size, jint payload_type, jlong videoMediaPortRef,
+			jstring jmimetype, jstring jcodec, jstring jcolor)
+{
+	int ret=0;
+	const char *f = NULL;
+	MediaPort *videoMediaPort;
+	jclass encoderClass;
+	jmethodID constructor;
+	jint frame_rate,iframe_rate;
+	jobject localObj;
+
+	mutexVideoTx.lock();
+
+	ret = 0;
+	if (init_log()!= 0)
+		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
+
+	f = env->GetStringUTFChars(outfile, NULL);
+	if (f == NULL) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		mutexVideoTx.unlock();
+		return -1;
+	}
+
+	videoMediaPort = (MediaPort*)videoMediaPortRef;
+	frame_rate = frame_rate_num/frame_rate_den;
+	iframe_rate= gop_size/frame_rate;
+
+	try {
+		vTxObj = new VideoTx(f, width, height, frame_rate_num,
+				frame_rate_den,	bit_rate, gop_size,
+				CODEC_ID_H264, payload_type, videoMediaPort);
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+		ret = -1;
+	}
+	encoderClass = env->FindClass("com/kurento/kas/media/tx/Encoder");
+	constructor = env->GetMethodID(encoderClass, "<init>",
+							"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IIIII)V");
+	localObj = env->NewObject(encoderClass, constructor, jcodec,
+						jmimetype, jcolor, width, height, frame_rate,
+						bit_rate, iframe_rate);
+	jEncObj = env->NewGlobalRef(localObj);
+	env->ReleaseStringUTFChars(outfile, f);
+	mutexVideoTx.unlock();
+
+	return ret;
+
+}
+
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 			jbyteArray frame, jint width, jint height, jlong time)
@@ -127,6 +201,39 @@ Java_com_kurento_kas_media_tx_MediaTx_putVideoFrame(JNIEnv* env, jclass clazz,
 	return ret;
 }
 
+JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrameJava(JNIEnv* env,
+		jclass clazz, jbyteArray frame, jint width, jint height, jlong time)
+{
+	uint8_t* frame_buf;
+	jclass encoderClass;
+	jmethodID mPutVideo, mGetSize;
+	jbyteArray frameOut;
+	int outSize,ret = 0;
+
+	if (!jEncObj || !vTxObj) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "No video-tx initiated");
+		mutexVideoTx.unlock();
+		return -1;
+	}
+
+	encoderClass = env->FindClass("com/kurento/kas/media/tx/Encoder");
+	mPutVideo = env->GetMethodID(encoderClass, "putVideoFrame", "([BII)[B");
+	frameOut = (jbyteArray) env->CallObjectMethod(jEncObj, mPutVideo, frame, width, height);
+	mGetSize = env-> GetMethodID(encoderClass, "getOutputSize", "([B)I");
+	outSize = (int) env-> CallIntMethod(jEncObj,mGetSize,frameOut);
+	frame_buf = (uint8_t*)(env->GetByteArrayElements(frameOut, JNI_FALSE));
+	try {
+		ret = vTxObj->putVideoFrameTxJava(frame_buf, width, height, time, outSize);
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+		ret = -1;
+	}
+	env->ReleaseByteArrayElements(frameOut, (jbyte*)frame_buf, JNI_ABORT);
+	mutexVideoTx.unlock();
+	return ret;
+}
+
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz)
 {
@@ -134,6 +241,27 @@ Java_com_kurento_kas_media_tx_MediaTx_finishVideo(JNIEnv* env, jclass clazz)
 	if (vTxObj) {
 		delete vTxObj;
 		vTxObj = NULL;
+	}
+	mutexVideoTx.unlock();
+	return 0;
+}
+
+
+JNIEXPORT jint JNICALL
+Java_com_kurento_kas_media_tx_MediaTx_finishVideoJava(JNIEnv* env, jclass clazz)
+{
+	jclass encoderClass;
+	jmethodID methodID;
+
+	mutexVideoTx.lock();
+	if (vTxObj) {
+		delete vTxObj;
+		vTxObj = NULL;
+	}
+	if (jEncObj){
+		encoderClass = env->FindClass("com/kurento/kas/media/tx/Encoder");
+		methodID = env->GetMethodID(encoderClass, "close", "()V");
+		env->CallVoidMethod(jEncObj,methodID);
 	}
 	mutexVideoTx.unlock();
 	return 0;
