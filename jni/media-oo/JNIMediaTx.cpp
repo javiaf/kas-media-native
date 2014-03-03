@@ -131,7 +131,7 @@ JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideoJava(JNIEn
 	MediaPort *videoMediaPort;
 	jclass encoderClass;
 	jmethodID constructor;
-	jint frame_rate,iframe_rate;
+	jint frame_rate;
 	jobject localObj;
 
 	mutexVideoTx.lock();
@@ -149,7 +149,7 @@ JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideoJava(JNIEn
 
 	videoMediaPort = (MediaPort*)videoMediaPortRef;
 	frame_rate = frame_rate_num/frame_rate_den;
-	iframe_rate= gop_size/frame_rate;
+
 
 	try {
 		vTxObj = new VideoTx(f, width, height, frame_rate_num,
@@ -165,7 +165,7 @@ JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_initVideoJava(JNIEn
 							"(Ljava/lang/String;Ljava/lang/String;Ljava/lang/String;IIIII)V");
 	localObj = env->NewObject(encoderClass, constructor, jcodec,
 						jmimetype, jcolor, width, height, frame_rate,
-						bit_rate, iframe_rate);
+						bit_rate, gop_size);
 	jEncObj = env->NewGlobalRef(localObj);
 	env->ReleaseStringUTFChars(outfile, f);
 	mutexVideoTx.unlock();
@@ -215,7 +215,6 @@ JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrameJava(J
 		mutexVideoTx.unlock();
 		return -1;
 	}
-
 	encoderClass = env->FindClass("com/kurento/kas/media/tx/Encoder");
 	mPutVideo = env->GetMethodID(encoderClass, "putVideoFrame", "([BII)[B");
 	frameOut = (jbyteArray) env->CallObjectMethod(jEncObj, mPutVideo, frame, width, height);
