@@ -23,12 +23,14 @@ extern "C" {
 #include "MediaPortManager.h"
 #include <AudioRx.h>
 #include <VideoRx.h>
+#include <VideoRxJava.h>
 
 using namespace media;
 
 static char* LOG_TAG = "NDK-media-rx";
 static AudioRx *aRxObj;
 static VideoRx *vRxObj;
+static VideoRxJava *vRxJObj;
 
 static Lock mutexAudioRx;
 static Lock mutexVideoRx;
@@ -36,6 +38,8 @@ static Lock mutexVideoRx;
 extern "C" {
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 				jlong videoMediaPortRef, jstring sdp, jint maxDelay, jobject videoReceiver);
+	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_startVideoRxJava(JNIEnv* env, jclass clazz,
+					jlong videoMediaPortRef, jstring sdp, jint maxDelay, jobject videoReceiver);
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz);
 
 	JNIEXPORT jint JNICALL Java_com_kurento_kas_media_rx_MediaRx_startAudioRx(JNIEnv* env, jclass clazz,
@@ -145,6 +149,7 @@ Java_com_kurento_kas_media_rx_MediaRx_startVideoRx(JNIEnv* env, jclass clazz,
 				jlong videoMediaPortRef, jstring sdp, jint maxDelay,
 				jobject videoReceiver)
 {
+	media_log(MEDIA_LOG_DEBUG, LOG_TAG, "BBBBBBBB");
 	int ret;
 	const char *p_sdp = NULL;
 	MediaPort *videoMediaPort;
@@ -255,6 +260,127 @@ end:
 	mutexVideoRx.unlock();
 	return ret;
 }
+
+JNIEXPORT jint JNICALL
+Java_com_kurento_kas_media_rx_MediaRx_startVideoRxJava(JNIEnv* env, jclass clazz,
+				jlong videoMediaPortRef, jstring sdp, jint maxDelay,
+				jobject videoReceiver)
+{
+
+	int ret;
+	const char *p_sdp = NULL;
+	MediaPort *videoMediaPort;
+
+	mutexVideoRx.lock();
+
+	jclass cls = NULL;
+
+	current_width = 0;
+	current_height = 0;
+
+	put_video_frame_rx_mid = NULL;
+	get_frame_buffer_mid = NULL;
+	VideoFrame_init_mid = NULL;
+	video_receiver = NULL;
+	VideoFrame_class = NULL;
+	jclass localRefCls = NULL;
+
+	if (init_log() != 0)
+		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
+
+	p_sdp = env->GetStringUTFChars(sdp, NULL);
+	if (p_sdp == NULL) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "OutOfMemoryError");
+		mutexVideoRx.unlock();
+		return -1;
+	}
+
+	cls = env->GetObjectClass(videoReceiver);
+	put_video_frame_rx_mid = env->GetMethodID(cls, "putVideoFrameRx",
+				"(Lcom/kurento/kas/media/rx/VideoFrame;)V");
+	if (!put_video_frame_rx_mid) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+		"putVideoFrameRx(Lcom/kurento/kas/media/rx/VideoFrame;)V no exist");
+		ret = -2;
+		goto end;
+	}
+
+	get_frame_buffer_mid = env->GetMethodID(cls, "getFrameBuffer", "(I)[I");
+	if (!get_frame_buffer_mid) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "getFrameBuffer(I)[I no exist");
+		ret = -3;
+		goto end;
+	}
+
+	localRefCls = env->FindClass("com/kurento/kas/media/rx/VideoFrame");
+	if (!localRefCls) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+				"com/kurento/kas/media/rx/VideoFrame not found");
+		ret = -4;
+		goto end;
+	}
+	VideoFrame_class = reinterpret_cast<jclass>(env->NewGlobalRef(localRefCls));
+	env->DeleteLocalRef(localRefCls);
+	if (!VideoFrame_class) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG,
+				"VideoFrame_class global ref error.");
+		ret = -4;
+		goto end;
+	}
+
+	VideoFrame_init_mid = env->GetMethodID(VideoFrame_class,
+							"<init>", "([IIIIIJJJI)V");
+	if (!VideoFrame_init_mid) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "init([IIIIIJJJI)V not found");
+		ret = -5;
+		goto end;
+	}
+
+	video_env = env;
+	video_receiver = env->NewGlobalRef(videoReceiver);
+
+	//Allocate AVFrame structure
+	df.width = 0;
+	df.height = 0;
+	df.priv_data = NULL;
+	df.pFrameRGB = avcodec_alloc_frame();
+	if (df.pFrameRGB == NULL) {
+		ret = -6;
+		goto end;
+	}
+
+	android_frame_manager.pix_fmt = (enum PixelFormat)ANDROID_PIX_FMT;
+	android_frame_manager.put_video_frame_rx = android_put_video_frame_rx;
+	android_frame_manager.get_decoded_frame = android_get_decoded_frame;
+	android_frame_manager.release_decoded_frame = android_release_decoded_frame;
+
+	videoMediaPort = (MediaPort*)videoMediaPortRef;
+
+
+	try {
+		vRxJObj = new VideoRxJava(env,videoMediaPort, p_sdp, maxDelay,
+				&android_frame_manager);
+		set_receive(1);
+		vRxJObj->start();
+	}
+	catch(MediaException &e) {
+		media_log(MEDIA_LOG_ERROR, LOG_TAG, "%s", e.what());
+	}
+
+	ret = 0;
+
+end:
+	video_env->DeleteGlobalRef((jintArray)df.priv_data);
+
+	env->DeleteLocalRef(cls);
+	env->DeleteGlobalRef(VideoFrame_class);
+	env->DeleteGlobalRef(video_receiver);
+	env->ReleaseStringUTFChars(sdp, p_sdp);
+	mutexVideoRx.unlock();
+	return ret;
+}
+
+
 
 JNIEXPORT jint JNICALL
 Java_com_kurento_kas_media_rx_MediaRx_stopVideoRx(JNIEnv* env, jclass clazz)

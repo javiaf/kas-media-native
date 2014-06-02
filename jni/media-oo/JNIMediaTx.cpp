@@ -83,7 +83,6 @@ Java_com_kurento_kas_media_tx_MediaTx_initVideo(JNIEnv* env, jclass clazz,
 	MediaPort *videoMediaPort;
 
 	mutexVideoTx.lock();
-
 	ret = 0;
 	if (init_log()!= 0)
 		media_log(MEDIA_LOG_WARN, LOG_TAG, "Couldn't init android log");
@@ -206,7 +205,7 @@ JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrameJava(J
 {
 	uint8_t* frame_buf;
 	jclass encoderClass;
-	jmethodID mPutVideo, mGetSize;
+	jmethodID mPutVideo;
 	jbyteArray frameOut;
 	int outSize,ret = 0;
 
@@ -218,9 +217,9 @@ JNIEXPORT jint JNICALL Java_com_kurento_kas_media_tx_MediaTx_putVideoFrameJava(J
 	encoderClass = env->FindClass("com/kurento/kas/media/tx/Encoder");
 	mPutVideo = env->GetMethodID(encoderClass, "putVideoFrame", "([BII)[B");
 	frameOut = (jbyteArray) env->CallObjectMethod(jEncObj, mPutVideo, frame, width, height);
-	mGetSize = env-> GetMethodID(encoderClass, "getOutputSize", "([B)I");
-	outSize = (int) env-> CallIntMethod(jEncObj,mGetSize,frameOut);
+	outSize = env->GetArrayLength(frameOut);
 	frame_buf = (uint8_t*)(env->GetByteArrayElements(frameOut, JNI_FALSE));
+
 	try {
 		ret = vTxObj->putVideoFrameTxJava(frame_buf, width, height, time, outSize);
 	}

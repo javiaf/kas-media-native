@@ -59,7 +59,7 @@ LOCAL_SRC_FILES :=	$(MEDIA_SOURCES)/util/utils.c $(MEDIA_SOURCES)/util/log.c \
 			$(MEDIA_SOURCES)/VideoTx.cpp $(MEDIA_SOURCES)/AudioTx.cpp \
 			$(MEDIA_SOURCES)/MediaRx.cpp \
 			$(MEDIA_SOURCES)/VideoRx.cpp $(MEDIA_SOURCES)/AudioRx.cpp \
-			\
+			$(MEDIA_SOURCES)/VideoRxJava.cpp \
 			jni/media-oo/init-log.c \
 			jni/media-oo/JNIMediaTx.cpp jni/media-oo/JNIMediaRx.cpp \
 			jni/media-oo/JNIMediaPort.cpp jni/media-oo/JNIMediaPortManager.cpp \
